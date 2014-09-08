@@ -14,24 +14,50 @@ $Math::Decimal128::VERSION = '0.01';
 
 use subs qw(DEC128_MAX DEC128_MIN);
 
+use overload
+  '+'     => \&_overload_add,
+  '*'     => \&_overload_mul,
+  '-'     => \&_overload_sub,
+  '/'     => \&_overload_div,
+  '+='    => \&_overload_add_eq,
+  '*='    => \&_overload_mul_eq,
+  '-='    => \&_overload_sub_eq,
+  '/='    => \&_overload_div_eq,
+  '""'    => \&_overload_string,
+  '=='    => \&_overload_equiv,
+  '!='    => \&_overload_not_equiv,
+  '<'     => \&_overload_lt,
+  '>'     => \&_overload_gt,
+  '<='    => \&_overload_lte,
+  '>='    => \&_overload_gte,
+  '<=>'   => \&_overload_spaceship,
+  '='     => \&_overload_copy,
+  '!'     => \&_overload_not,
+  'bool'  => \&_overload_true,
+  'abs'   => \&_overload_abs,
+  '++'    => \&_overload_inc,
+  '--'    => \&_overload_dec,
+  'int'   => \&_overload_int,
+;
+
 DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
 
 @Math::Decimal128::EXPORT = ();
 @Math::Decimal128::EXPORT_OK = qw(
-    NaND128 InfD128 ZeroD128 UnityD128 Exp10 NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV LDtoD128 D128toLD DESTROY assignPV assignNaN assignInf
+    NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
+    have_strtod128 D128toNV LDtoD128 D128toLD assignPVl assignNaNl assignInfl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
-    assignME assignInf assignNaN assignPV Exp10
+    assignMEl d128_bytes MEtoD128 hex2binl decode_bidl
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
-    NaND128 InfD128 ZeroD128 UnityD128 Exp10 NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV LDtoD128 D128toLD DESTROY assignPV assignNaN assignInf
+    NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
+    have_strtod128 D128toNV LDtoD128 D128toLD assignPVl assignNaNl assignInfl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
-    assignME assignInf assignNaN assignPV Exp10
+    assignMEl d128_bytes MEtoD128 hex2binl decode_bidl
     )]);
 
-my %dpd_correlation = (
+%Math::Decimal128::dpd_correlation = 1 ? (
      '0000000000' => '000', '0000000001' => '001', '0000000010' => '002', '0000000011' => '003',
      '0000000100' => '004', '0000000101' => '005', '0000000110' => '006', '0000000111' => '007',
      '0000001000' => '008', '0000001001' => '009', '0000010000' => '010', '0000010001' => '011',
@@ -282,7 +308,44 @@ my %dpd_correlation = (
      '0011101110' => '988', '0011101111' => '989', '0010011110' => '990', '0010011111' => '991',
      '0110011110' => '992', '0110011111' => '993', '1010011110' => '994', '1010011111' => '995',
      '1110011110' => '996', '1110011111' => '997', '0011111110' => '998', '0011111111' => '999',
-);
+) : ();
+
+%Math::Decimal128::bid_decode = 1 ? (
+ 0 => MEtoD128('1' . ('0' x 33), 0), 1 => MEtoD128('1' . ('0' x 32), 0),
+ 2 => MEtoD128('1' . ('0' x 31), 0), 3 => MEtoD128('1' . ('0' x 30), 0),
+ 4 => MEtoD128('1' . ('0' x 29), 0), 5 => MEtoD128('1' . ('0' x 28), 0),
+ 6 => MEtoD128('1' . ('0' x 27), 0), 7 => MEtoD128('1' . ('0' x 26), 0),
+ 8 => MEtoD128('1' . ('0' x 25), 0), 9 => MEtoD128('1' . ('0' x 24), 0),
+ 10 => MEtoD128('1' . ('0' x 23), 0), 11 => MEtoD128('1' . ('0' x 22), 0),
+ 12 => MEtoD128('1' . ('0' x 21), 0), 13 => MEtoD128('1' . ('0' x 20), 0),
+ 14 => MEtoD128('1' . ('0' x 19), 0), 15 => MEtoD128('1' . ('0' x 18), 0),
+ 16 => MEtoD128('1' . ('0' x 17), 0), 17 => MEtoD128('1' . ('0' x 16), 0),
+ 18 => MEtoD128('1' . ('0' x 15), 0), 19 => MEtoD128('1' . ('0' x 14), 0),
+ 20 => MEtoD128('1' . ('0' x 13), 0), 21 => MEtoD128('1' . ('0' x 12), 0),
+ 22 => MEtoD128('1' . ('0' x 11), 0), 23 => MEtoD128('1' . ('0' x 10), 0),
+ 24 => MEtoD128('1' . ('0' x 9), 0), 25 => MEtoD128('1' . ('0' x 8), 0),
+ 26 => MEtoD128('1' . ('0' x 7), 0), 27 => MEtoD128('1' . ('0' x 6), 0),
+ 28 => MEtoD128('1' . ('0' x 5), 0), 29 => MEtoD128('1' . ('0' x 4), 0),
+ 30 => MEtoD128('1' . ('0' x 3), 0), 31 => MEtoD128('1' . ('0' x 2), 0),
+ 32 => MEtoD128('1' . ('0' x 1), 0), 33 => MEtoD128('1', 0)
+) : ();
+
+sub _decode_mant {
+  my $val = shift;
+  my $ret = '';
+  for my $i(0 .. 33) {
+    my $count = 0;
+    if($val > 0) {
+      while($val >= $Math::Decimal128::bid_decode{$i}) {
+        $val -= $Math::Decimal128::bid_decode{$i};
+        $count++;
+      }
+    }
+    $ret .= $count;
+  }
+  return $ret;
+}
+
 
 sub dl_load_flags {0} # Prevent DynaLoader from complaining and croaking
 
@@ -386,18 +449,34 @@ sub MEtoD128 {
   die "Invalid 2nd arg ($arg2) to MEtoD128" if $arg2 =~ /[^0-9\-]/;
 
   my $len_1 = length($arg1);
-  $len_1-- if $arg1 =~ /^\-/;
+  my $sign = $arg1 =~ /^\-/ ? '-' : '';
+  if($sign) {
+    $len_1--;
+    $arg1 =~ s/^\-//;
+  }
+
 
   if($len_1 > 34) {
     die "$arg1 exceeds _Decimal128 precision.",
         " It needs to be shortened to no more than 34 decimal digits";
   }
 
-  return _MEtoD128($arg1, $arg2);
+  # split $arg1 into segments that don't exceed 16 digits.
+
+  my($msd, $nsd, $lsd);
+
+  {
+  no warnings 'substr';
+  $msd = substr($arg1, -34, 10) || '0';
+  $nsd = substr($arg1, -24, 12) || '0';
+  $lsd = substr($arg1, -12, 12) || '0';
+  }
+
+  return _MEtoD128($sign . $msd, $sign . $nsd, $sign . $lsd, $arg2);
 
 }
 
-sub assignME {
+sub assignMEl {
   # Check that 3 args are supplied
   die "assignME takes 3 args" if @_ != 3;
 
@@ -435,5 +514,66 @@ sub _sci2me {
 
 sub DEC128_MAX {return _DEC128_MAX()}
 sub DEC128_MIN {return _DEC128_MIN()}
+
+sub d128_bytes {
+  my @ret = _d128_bytes($_[0]);
+  return join '', @ret;
+}
+
+sub hex2binl {
+    my $ret = unpack("B*", (pack "H*", $_[0]));
+    my $len = length $ret;
+    die "hex2bin() yielded $len bits" if $len != 128;
+    return $ret;
+}
+
+sub decode_bidl {
+  # Takes a Math::Decimal128 object as its arg.
+  # Decodes Binary Integer Decimal formatting of the _Decimal128 value.
+
+  my $keep = hex2binl(d128_bytes($_[0]));
+  die "Base 2 representation is wrong size (", length($keep), ")"
+    if length($keep) != 128;
+  my $leading_bits =  17;
+  my $trailing_bits = 111;
+  my @mantissa;
+  my $exp;                  # exponent
+  my $sign = substr($keep, 0, 1) ? '-' : '';
+  return 'nan' if substr($keep, 1, 5) eq '11111';
+  if(substr($keep, 1 ,5) eq '11110') {return $sign . 'inf'}
+  my $pre = substr($keep, 1, 2);
+  if($pre eq '00' || $pre eq '01' || $pre eq '10') {
+    $exp = oct('0b' . substr($keep, 1, 14)) - 6176;
+    @mantissa =  reverse(split(//, '0' . substr($keep, 15, 113)));
+    my $m = _bid_mant(\@mantissa); # $m is a Math::Decimal128 object
+    my $mantissa = _decode_mant($m);
+    $mantissa =~ s/^0+//;
+    if($mantissa !~ /[1-9]/) { $mantissa = '0'}
+    else {
+      while($mantissa =~ /0$/) {
+        $mantissa =~ s/0$//;
+        $exp++;
+      }
+    }
+    return $sign . $mantissa . 'e' . $exp;
+  }
+  $pre = substr($keep, 1, 4);
+  if($pre eq '1100' || $pre eq '1101' || $pre eq '1110') {
+    $exp = oct('0b' . substr($keep, 3, 14)) - 6176;
+    @mantissa = reverse(split(//,'100' . substr($keep, 17, 111)));
+    my $m = _bid_mant(\@mantissa); # $m is a Math::Decimal128 object
+    my $mantissa = _decode_mant($m);
+    $mantissa =~ s/^0+//;
+    if($mantissa !~ /[1-9]/) { $mantissa = '0'}
+    else {
+      while($mantissa =~ /0$/) {
+        $mantissa =~ s/0$//;
+        $exp++;
+      }
+    }
+    return $sign . $mantissa . 'e' . $exp;
+  }
+  die "decode_bid function failed to parse its argument ($_[0])";
+}
 
 1;

@@ -1201,16 +1201,12 @@ SV * _get_xs_version(pTHX) {
      return newSVpv(XS_VERSION, 0);
 }
 
-void _get_byte(void * p, int i, char * b) {
-  sprintf(b, "%02X", ((unsigned char*)p)[i]);
-}
-
 void _d128_bytes(pTHX_ SV * sv) {
   dXSARGS;
   _Decimal128 d128 = *(INT2PTR(_Decimal128 *, SvIV(SvRV(sv))));
   int i, n = sizeof(_Decimal128);
   char * buff;
-  char * p = &d128;
+  void * p = &d128;
 
   Newx(buff, 4, char);
   if(buff == NULL) croak("Failed to allocate meemory in _d128_bytes function");
@@ -1223,7 +1219,7 @@ void _d128_bytes(pTHX_ SV * sv) {
   for (i = n - 1; i >= 0; i--) {
 #endif
 
-    _get_byte(&d128, i, buff);
+    sprintf(buff, "%02X", ((unsigned char*)p)[i]);
     XPUSHs(sv_2mortal(newSVpv(buff, 0)));
   }
   PUTBACK;
@@ -1853,24 +1849,6 @@ CODE:
   RETVAL = _get_xs_version (aTHX);
 OUTPUT:  RETVAL
 
-
-void
-_get_byte (p, i, b)
-	void *	p
-	int	i
-	char *	b
-        PREINIT:
-        I32* temp;
-        PPCODE:
-        temp = PL_markstack_ptr++;
-        _get_byte(p, i, b);
-        if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-          PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
 
 void
 _d128_bytes (sv)

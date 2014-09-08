@@ -7,7 +7,6 @@
 
 #define PERL_NO_GET_CONTEXT 1
 
-
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -40,9 +39,9 @@ int  _is_nan(D128 x) {
 
 int  _is_inf(D128 x) {
      if(x != x) return 0; /* NaN  */
-     if(x == 0.0DL) return 0; /* Zero */
+     if(x == 0.DL) return 0; /* Zero */
      if(x/x != x/x) {
-       if(x < 0.0DL) return -1;
+       if(x < 0.DL) return -1;
        else return 1;
      }
      return 0; /* Finite Real */
@@ -51,7 +50,7 @@ int  _is_inf(D128 x) {
 int  _is_neg_zero(D128 x) {
      char * buffer;
 
-     if(x != 0.0DL) return 0;
+     if(x != 0.DL) return 0;
 
      Newx(buffer, 2, char);
      sprintf(buffer, "%.0f", (double)x);
@@ -99,8 +98,8 @@ SV *  _is_neg_zero_NV(pTHX_ SV * x) {
 }
 
 D128 _get_inf(int sign) {
-     if(sign < 0) return -1.0DL/0.0DL;
-     return 1.0DL/0.0DL;
+     if(sign < 0) return -1.DL/0.DL;
+     return 1.DL/0.DL;
 }
 
 D128 _get_nan(void) {
@@ -118,7 +117,7 @@ SV * _DEC128_MAX(pTHX) {
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = 9999999999999999e369DL;
+     *d128 = 9999999999999999999999999999999999e6111DL;
 
 
      sv_setiv(obj, INT2PTR(IV,d128));
@@ -136,7 +135,7 @@ SV * _DEC128_MIN(pTHX) {
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = 1e-398DL;
+     *d128 = 1e-6176DL;
 
 
      sv_setiv(obj, INT2PTR(IV,d128));
@@ -150,7 +149,7 @@ SV * NaND128(pTHX) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in NaND128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in NaND128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -167,7 +166,7 @@ SV * InfD128(pTHX_ int sign) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in InfD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in InfD128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -184,12 +183,12 @@ SV * ZeroD128(pTHX_ int sign) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in ZeroD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in ZeroD128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = 0.0DL;
+     *d128 = 0.DL;
      if(sign < 0) *d128 *= -1;
 
      sv_setiv(obj, INT2PTR(IV,d128));
@@ -202,12 +201,13 @@ SV * UnityD128(pTHX_ int sign) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in UnityD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in UnityD128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = 1.0DL;
+     *d128 = 1e0DL;
+     /* *d128 = (D128)strtold("1e0", NULL); */
      if(sign < 0) *d128 *= -1;
 
      sv_setiv(obj, INT2PTR(IV,d128));
@@ -215,11 +215,11 @@ SV * UnityD128(pTHX_ int sign) {
      return obj_ref;
 }
 
-SV * Exp10(pTHX_ int power) {
+SV * Exp10l(pTHX_ int power) {
      D128 * d128;
      SV * obj_ref, * obj;
 
-     if(power < -398 || power > 384)
+     if(power < -6176 || power > 6144)
        croak("Argument supplied to Exp10 function (%d) is out of allowable range", power);
 
      Newx(d128, 1, D128);
@@ -228,16 +228,16 @@ SV * Exp10(pTHX_ int power) {
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = 1.0DL;
+     *d128 = 1.DL;
      if(power < 0) {
        while(power) {
-         *d128 *= 0.1DL;
+         *d128 *= 1e-1DL;
          power++;
        }
      }
      else {
        while(power) {
-         *d128 *= 10.0DL;
+         *d128 *= 10.DL;
          power--;
        }
      }
@@ -247,7 +247,7 @@ SV * Exp10(pTHX_ int power) {
      return obj_ref;
 }
 
-SV * _testvalD128(pTHX_ int sign) {
+SV * _testvalD128_1(pTHX_ int sign) {
      D128 * d128;
      SV * obj_ref, * obj;
 
@@ -257,7 +257,7 @@ SV * _testvalD128(pTHX_ int sign) {
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = 9307199254740993e-15DL;
+     *d128 = 93071992547409938307199254740993e0DL;
 
      if(sign < 0) *d128 *= -1;
 
@@ -266,15 +266,70 @@ SV * _testvalD128(pTHX_ int sign) {
      return obj_ref;
 }
 
-SV * _MEtoD128(pTHX_ char * mantissa, SV * exponent) {
+
+SV * _testvalD128_2(pTHX_ int sign) {
+     D128 * d128;
+     SV * obj_ref, * obj;
+
+     Newx(d128, 1, D128);
+     if(d128 == NULL) croak("Failed to allocate memory in _testvalD128() function");
+
+     obj_ref = newSV(0);
+     obj = newSVrv(obj_ref, "Math::Decimal128");
+
+     *d128 = 2547409938307199254740993e0DL;
+
+     if(sign < 0) *d128 *= -1;
+
+     sv_setiv(obj, INT2PTR(IV,d128));
+     SvREADONLY_on(obj);
+     return obj_ref;
+}
+
+SV * _testvalD128_3(pTHX_ int sign) {
+     D128 * d128;
+     SV * obj_ref, * obj;
+
+     Newx(d128, 1, D128);
+     if(d128 == NULL) croak("Failed to allocate memory in _testvalD128() function");
+
+     obj_ref = newSV(0);
+     obj = newSVrv(obj_ref, "Math::Decimal128");
+
+     *d128 = 9938307199254740993e0DL;
+
+     if(sign < 0) *d128 *= -1;
+
+     sv_setiv(obj, INT2PTR(IV,d128));
+     SvREADONLY_on(obj);
+     return obj_ref;
+}
+
+SV * _testvalD128_4(pTHX_ int sign) {
+     D128 * d128;
+     SV * obj_ref, * obj;
+
+     Newx(d128, 1, D128);
+     if(d128 == NULL) croak("Failed to allocate memory in _testvalD128() function");
+
+     obj_ref = newSV(0);
+     obj = newSVrv(obj_ref, "Math::Decimal128");
+
+     *d128 = 4740993e0DL;
+
+     if(sign < 0) *d128 *= -1;
+
+     sv_setiv(obj, INT2PTR(IV,d128));
+     SvREADONLY_on(obj);
+     return obj_ref;
+}
+
+SV * _MEtoD128(pTHX_ char * msd, char * nsd, char * lsd, SV * exponent) {
 
      D128 * d128;
      SV * obj_ref, * obj;
      int exp = (int)SvIV(exponent), i;
-     char * ptr;
-     long double man;
-
-     man = strtold(mantissa, &ptr);
+     long double m;
 
      Newx(d128, 1, D128);
      if(d128 == NULL) croak("Failed to allocate memory in MEtoD128() function");
@@ -282,17 +337,46 @@ SV * _MEtoD128(pTHX_ char * mantissa, SV * exponent) {
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = (D128)man;
+     m = strtold(msd, NULL);
+     *d128 = (D128)m * 1e24DL;
+
+     m = strtold(nsd, NULL);
+     *d128 += (D128)m * 1e12DL;
+
+     m = strtold(lsd, NULL);
+     *d128 += (D128)m;
+
      if(exp < 0) {
-       for(i = 0; i > exp; --i) *d128 *= 0.1DL;
+       for(i = 0; i > exp; --i) *d128 *= 1e-1DL;
      }
      else {
-       for(i = 0; i < exp; ++i) *d128 *= 10.0DL;
+       for(i = 0; i < exp; ++i) *d128 *= 10.DL;
      }
 
      sv_setiv(obj, INT2PTR(IV,d128));
      SvREADONLY_on(obj);
      return obj_ref;
+}
+
+void _assignMEl(pTHX_ SV * a, char * msd, char * nsd, char * lsd, SV * c) {
+     long double man;
+     int exp = (int)SvIV(c), i;
+
+     man = strtold(msd, NULL);
+     *(INT2PTR(D128 *, SvIV(SvRV(a)))) = (D128)man * 1e24DL;
+
+     man = strtold(nsd, NULL);
+     *(INT2PTR(D128 *, SvIV(SvRV(a)))) += (D128)man * 1e12DL;
+
+     man = strtold(lsd, NULL);
+     *(INT2PTR(D128 *, SvIV(SvRV(a)))) += (D128)man;
+
+     if(exp < 0) {
+       for(i = 0; i > exp; --i) *(INT2PTR(D128 *, SvIV(SvRV(a)))) *= 1e-1DL;
+     }
+     else {
+       for(i = 0; i < exp; ++i) *(INT2PTR(D128 *, SvIV(SvRV(a)))) *= 10.DL;
+     }
 }
 
 SV * NVtoD128(pTHX_ SV * x) {
@@ -301,7 +385,7 @@ SV * NVtoD128(pTHX_ SV * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in NVtoD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in NVtoD128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -319,7 +403,7 @@ SV * UVtoD128(pTHX_ SV * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in UVtoD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in UVtoD128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -337,7 +421,7 @@ SV * IVtoD128(pTHX_ SV * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in IVtoD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in IVtoD128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -358,7 +442,7 @@ SV * PVtoD128(pTHX_ char * x) {
      temp = strtold(x, &ptr);
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in PVtoD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in PVtoD128(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -377,7 +461,7 @@ SV * STRtoD128(pTHX_ char * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in STRtoD128() function");
+     if(d128 == NULL) croak("Failed to allocate memory in STRtoD128(aTHX) function");
 
      *d128 = strtod128(x, &ptr);
 
@@ -432,31 +516,7 @@ void DESTROY(pTHX_ SV *  rop) {
      Safefree(INT2PTR(D128 *, SvIV(SvRV(rop))));
 }
 
-void _assignME(pTHX_ SV * a, char * mantissa, SV * c) {
-     char * ptr;
-     long double man;
-     int exp = (int)SvIV(c), i;
-
-     man = strtold(mantissa, &ptr);
-
-     *(INT2PTR(D128 *, SvIV(SvRV(a)))) = (D128)man;
-
-     if(exp < 0) {
-       for(i = 0; i > exp; --i) *(INT2PTR(D128 *, SvIV(SvRV(a)))) *= 0.1DL;
-     }
-     else {
-       for(i = 0; i < exp; ++i) *(INT2PTR(D128 *, SvIV(SvRV(a)))) *= 10.0DL;
-     }
-}
-
-void assignPV(pTHX_ SV * a, char * str) {
-     char * ptr;
-     long double man = strtold(str, &ptr);
-
-     *(INT2PTR(D128 *, SvIV(SvRV(a)))) = (D128)man;
-}
-
-void assignNaN(pTHX_ SV * a) {
+void assignNaNl(pTHX_ SV * a) {
 
      if(sv_isobject(a)) {
        const char * h = HvNAME(SvSTASH(SvRV(a)));
@@ -468,7 +528,7 @@ void assignNaN(pTHX_ SV * a) {
      else croak("Invalid argument supplied to Math::Decimal128::assignNaN function");
 }
 
-void assignInf(pTHX_ SV * a, int sign) {
+void assignInfl(pTHX_ SV * a, int sign) {
 
      if(sv_isobject(a)) {
        const char * h = HvNAME(SvSTASH(SvRV(a)));
@@ -486,7 +546,7 @@ SV * _overload_add(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_add() function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_add(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -521,7 +581,7 @@ SV * _overload_mul(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_mul() function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_mul(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -556,7 +616,7 @@ SV * _overload_sub(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_sub() function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_sub(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -586,7 +646,7 @@ SV * _overload_sub(pTHX_ SV * a, SV * b, SV * third) {
     }
 
     if(third == &PL_sv_yes) {
-      *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a)))) * -1.0DL;
+      *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a)))) * -1.DL;
       return obj_ref;
     }
 
@@ -599,7 +659,7 @@ SV * _overload_div(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_div() function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_div(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -907,7 +967,7 @@ SV * _overload_copy(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_copy() function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_copy(aTHX) function");
 
      *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a))));
 
@@ -927,7 +987,7 @@ SV * D128toD128(pTHX_ SV * a) {
        if(strEQ(h, "Math::Decimal128")) {
 
          Newx(d128, 1, D128);
-         if(d128 == NULL) croak("Failed to allocate memory in D128toD128() function");
+         if(d128 == NULL) croak("Failed to allocate memory in D128toD128(aTHX) function");
 
          *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a))));
 
@@ -945,13 +1005,13 @@ SV * D128toD128(pTHX_ SV * a) {
 SV * _overload_true(pTHX_ SV * a, SV * b, SV * third) {
 
      if(_is_nan(*(INT2PTR(D128 *, SvIV(SvRV(a)))))) return newSViv(0);
-     if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) != 0.0DL) return newSViv(1);
+     if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) != 0.DL) return newSViv(1);
      return newSViv(0);
 }
 
 SV * _overload_not(pTHX_ SV * a, SV * b, SV * third) {
      if(_is_nan(*(INT2PTR(D128 *, SvIV(SvRV(a)))))) return newSViv(1);
-     if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) != 0.0DL) return newSViv(0);
+     if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) != 0.DL) return newSViv(0);
      return newSViv(1);
 }
 
@@ -961,7 +1021,7 @@ SV * _overload_abs(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_abs() function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_abs(aTHX) function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -970,19 +1030,19 @@ SV * _overload_abs(pTHX_ SV * a, SV * b, SV * third) {
      SvREADONLY_on(obj);
 
      *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a))));
-     if(_is_neg_zero(*d128) || *d128 < 0 ) *d128 *= -1.0DL;
+     if(_is_neg_zero(*d128) || *d128 < 0 ) *d128 *= -1.DL;
      return obj_ref;
 }
 
 SV * _overload_inc(pTHX_ SV * p, SV * second, SV * third) {
      SvREFCNT_inc(p);
-     *(INT2PTR(D128 *, SvIV(SvRV(p)))) += 1.0DL;
+     *(INT2PTR(D128 *, SvIV(SvRV(p)))) += 1.DL;
      return p;
 }
 
 SV * _overload_dec(pTHX_ SV * p, SV * second, SV * third) {
      SvREFCNT_inc(p);
-     *(INT2PTR(D128 *, SvIV(SvRV(p)))) -= 1.0DL;
+     *(INT2PTR(D128 *, SvIV(SvRV(p)))) -= 1.DL;
      return p;
 }
 
@@ -993,7 +1053,7 @@ SV * _itsa(pTHX_ SV * a) {
      if(SvPOK(a)) return newSVuv(4);
      if(sv_isobject(a)) {
        const char *h = HvNAME(SvSTASH(SvRV(a)));
-       if(strEQ(h, "Math::Decimal128")) return newSVuv(128);
+       if(strEQ(h, "Math::Decimal128")) return newSVuv(34);
      }
      return newSVuv(0);
 }
@@ -1021,7 +1081,7 @@ SV * is_ZeroD128(pTHX_ SV * b) {
       const char *h = HvNAME(SvSTASH(SvRV(b)));
       if(strEQ(h, "Math::Decimal128"))
          if (_is_neg_zero(*(INT2PTR(D128 *, SvIV(SvRV(b)))))) return newSViv(-1);
-         if (*(INT2PTR(D128 *, SvIV(SvRV(b)))) == 0.0DL) return newSViv(1);
+         if (*(INT2PTR(D128 *, SvIV(SvRV(b)))) == 0.DL) return newSViv(1);
          return newSViv(0);
      }
      croak("Invalid argument supplied to Math::Decimal128::is_ZeroD128 function");
@@ -1037,7 +1097,7 @@ void _D128toME(pTHX_ SV * a) {
        const char *h = HvNAME(SvSTASH(SvRV(a)));
        if(strEQ(h, "Math::Decimal128")) {
           t = *(INT2PTR(D128 *, SvIV(SvRV(a))));
-          if(_is_nan(t) || _is_inf(t) || t == 0.0DL) {
+          if(_is_nan(t) || _is_inf(t) || t == 0.DL) {
             EXTEND(SP, 2);
             ST(0) = sv_2mortal(newSVnv(t));
             ST(1) = sv_2mortal(newSViv(0));
@@ -1053,8 +1113,8 @@ void _D128toME(pTHX_ SV * a) {
             t *= 1e-150DL; /* (long double)t should now be in range */
           }
 
-          if((long double)t <  LDBL_MIN * 128.0L &&
-             (long double)t > -LDBL_MIN * 128.0L) {
+          if((long double)t <  LDBL_MIN * 128.L &&
+             (long double)t > -LDBL_MIN * 128.L) {
             count = -150;
             t *= 1e150DL; /* (long double)t should now be in range */
           }
@@ -1076,7 +1136,7 @@ void _D128toME(pTHX_ SV * a) {
 
 /* Replaced by newer rendition (above) that caters for the case that the long double
    has the same exponent range as the double - eg. powerpc "double-double arithmetic".
-void _D128toME(pTHX_ SV * a) {
+void _D128toME(aTHX_ SV * a) {
      dXSARGS;
      D128 t;
      char * buffer;
@@ -1086,7 +1146,7 @@ void _D128toME(pTHX_ SV * a) {
        if(strEQ(h, "Math::Decimal128")) {
           EXTEND(SP, 2);
           t = *(INT2PTR(D128 *, SvIV(SvRV(a))));
-          if(_is_nan(t) || _is_inf(t) || t == 0.0DL) {
+          if(_is_nan(t) || _is_inf(t) || t == 0.DL) {
             ST(0) = sv_2mortal(newSVnv(t));
             ST(1) = sv_2mortal(newSViv(0));
             XSRETURN(2);
@@ -1140,7 +1200,113 @@ SV * _wrap_count(pTHX) {
 SV * _get_xs_version(pTHX) {
      return newSVpv(XS_VERSION, 0);
 }
-MODULE = Math::Decimal128	PACKAGE = Math::Decimal128
+
+void _get_byte(void * p, int i, char * b) {
+  sprintf(b, "%02X", ((unsigned char*)p)[i]);
+}
+
+void _d128_bytes(pTHX_ SV * sv) {
+  dXSARGS;
+  _Decimal128 d128 = *(INT2PTR(_Decimal128 *, SvIV(SvRV(sv))));
+  int i, n = sizeof(_Decimal128);
+  char * buff;
+  char * p = &d128;
+
+  Newx(buff, 4, char);
+  if(buff == NULL) croak("Failed to allocate meemory in _d128_bytes function");
+
+  sp = mark;
+
+#ifdef BENDIAN
+  for (i = 0; i < n; i++) {
+#else
+  for (i = n - 1; i >= 0; i--) {
+#endif
+
+    _get_byte(&d128, i, buff);
+    XPUSHs(sv_2mortal(newSVpv(buff, 0)));
+  }
+  PUTBACK;
+  Safefree(buff);
+  XSRETURN(n);
+}
+
+SV * _endianness(pTHX) {
+#if defined(WE_HAVE_BENDIAN)
+  return newSVpv("Big Endian", 0);
+#elif defined(WE_HAVE_LENDIAN)
+  return newSVpv("Little Endian", 0);
+#else
+  return &PL_sv_undef;
+#endif
+}
+
+SV * _bid_mant(pTHX_ SV * bin) {
+
+  D128 * d128;
+  SV * obj_ref, * obj;
+  int i, imax = av_len((AV*)SvRV(bin));
+  char * buf;
+  D128 val = 0.DL;
+  D128 add_on[113] = {
+      1e0DL, 2e0DL, 4e0DL, 8e0DL, 16e0DL, 32e0DL, 64e0DL, 128e0DL, 256e0DL, 512e0DL, 1024e0DL,
+      2048e0DL, 4096e0DL, 8192e0DL, 16384e0DL, 32768e0DL, 65536e0DL, 131072e0DL, 262144e0DL,
+      524288e0DL, 1048576e0DL, 2097152e0DL, 4194304e0DL, 8388608e0DL, 16777216e0DL, 33554432e0DL,
+      67108864e0DL, 134217728e0DL, 268435456e0DL, 536870912e0DL, 1073741824e0DL, 2147483648e0DL,
+      4294967296e0DL, 8589934592e0DL, 17179869184e0DL, 34359738368e0DL, 68719476736e0DL,
+      137438953472e0DL, 274877906944e0DL, 549755813888e0DL, 1099511627776e0DL, 2199023255552e0DL,
+      4398046511104e0DL, 8796093022208e0DL, 17592186044416e0DL, 35184372088832e0DL,
+      70368744177664e0DL, 140737488355328e0DL, 281474976710656e0DL, 562949953421312e0DL,
+      1125899906842624e0DL, 2251799813685248e0DL, 4503599627370496e0DL, 9007199254740992e0DL,
+      18014398509481984e0DL, 36028797018963968e0DL, 72057594037927936e0DL, 144115188075855872e0DL,
+      288230376151711744e0DL, 576460752303423488e0DL, 1152921504606846976e0DL,
+      2305843009213693952e0DL, 4611686018427387904e0DL, 9223372036854775808e0DL,
+      18446744073709551616e0DL, 36893488147419103232e0DL, 73786976294838206464e0DL,
+      147573952589676412928e0DL, 295147905179352825856e0DL, 590295810358705651712e0DL,
+      1180591620717411303424e0DL, 2361183241434822606848e0DL, 4722366482869645213696e0DL,
+      9444732965739290427392e0DL, 18889465931478580854784e0DL, 37778931862957161709568e0DL,
+      75557863725914323419136e0DL, 151115727451828646838272e0DL, 302231454903657293676544e0DL,
+      604462909807314587353088e0DL, 1208925819614629174706176e0DL, 2417851639229258349412352e0DL,
+      4835703278458516698824704e0DL, 9671406556917033397649408e0DL, 19342813113834066795298816e0DL,
+      38685626227668133590597632e0DL, 77371252455336267181195264e0DL,
+      154742504910672534362390528e0DL, 309485009821345068724781056e0DL,
+      618970019642690137449562112e0DL, 1237940039285380274899124224e0DL,
+      2475880078570760549798248448e0DL, 4951760157141521099596496896e0DL,
+      9903520314283042199192993792e0DL, 19807040628566084398385987584e0DL,
+      39614081257132168796771975168e0DL, 79228162514264337593543950336e0DL,
+      158456325028528675187087900672e0DL, 316912650057057350374175801344e0DL,
+      633825300114114700748351602688e0DL, 1267650600228229401496703205376e0DL,
+      2535301200456458802993406410752e0DL, 5070602400912917605986812821504e0DL,
+      10141204801825835211973625643008e0DL, 20282409603651670423947251286016e0DL,
+      40564819207303340847894502572032e0DL, 81129638414606681695789005144064e0DL,
+      162259276829213363391578010288128e0DL, 324518553658426726783156020576256e0DL,
+      649037107316853453566312041152512e0DL, 1298074214633706907132624082305024e0DL,
+      2596148429267413814265248164610048e0DL, 5192296858534827628530496329220096e0DL };
+
+  Newx(d128, 1, D128);
+  if(d128 == NULL) croak("Failed to allocate memory in _bid_mant function");
+
+  for(i = 0; i <= imax; i++)
+    if(SvIV(*(av_fetch((AV*)SvRV(bin), i, 0)))) val += add_on[i];
+
+  /* If val is inf or nan this function would not have been called.
+     Therefore, if val > DEC128_MAX it must be one of those illegal
+     values that should be set to zero */
+
+  if(val > 9999999999999999999999999999999999e0DL) val = 0.DL;
+
+  obj_ref = newSV(0);
+  obj = newSVrv(obj_ref, "Math::Decimal128");
+
+  *d128 = val;
+  sv_setiv(obj, INT2PTR(IV,d128));
+  SvREADONLY_on(obj);
+  return obj_ref;
+
+}
+
+
+MODULE = Math::Decimal128  PACKAGE = Math::Decimal128
 
 PROTOTYPES: DISABLE
 
@@ -1209,26 +1375,69 @@ CODE:
 OUTPUT:  RETVAL
 
 SV *
-Exp10 (power)
+Exp10l (power)
 	int	power
 CODE:
-  RETVAL = Exp10 (aTHX_ power);
+  RETVAL = Exp10l (aTHX_ power);
 OUTPUT:  RETVAL
 
 SV *
-_testvalD128 (sign)
+_testvalD128_1 (sign)
 	int	sign
 CODE:
-  RETVAL = _testvalD128 (aTHX_ sign);
+  RETVAL = _testvalD128_1 (aTHX_ sign);
 OUTPUT:  RETVAL
 
 SV *
-_MEtoD128 (mantissa, exponent)
-	char *	mantissa
+_testvalD128_2 (sign)
+	int	sign
+CODE:
+  RETVAL = _testvalD128_2 (aTHX_ sign);
+OUTPUT:  RETVAL
+
+SV *
+_testvalD128_3 (sign)
+	int	sign
+CODE:
+  RETVAL = _testvalD128_3 (aTHX_ sign);
+OUTPUT:  RETVAL
+
+SV *
+_testvalD128_4 (sign)
+	int	sign
+CODE:
+  RETVAL = _testvalD128_4 (aTHX_ sign);
+OUTPUT:  RETVAL
+
+SV *
+_MEtoD128 (msd, nsd, lsd, exponent)
+	char *	msd
+	char *	nsd
+	char *	lsd
 	SV *	exponent
 CODE:
-  RETVAL = _MEtoD128 (aTHX_ mantissa, exponent);
+  RETVAL = _MEtoD128 (aTHX_ msd, nsd, lsd, exponent);
 OUTPUT:  RETVAL
+
+void
+_assignMEl (a, msd, nsd, lsd, c)
+	SV *	a
+	char *	msd
+	char *	nsd
+	char *	lsd
+	SV *	c
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _assignMEl(aTHX_ a, msd, nsd, lsd, c);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
 
 SV *
 NVtoD128 (x)
@@ -1280,119 +1489,84 @@ void
 LDtoD128 (d128, ld)
 	SV *	d128
 	SV *	ld
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	LDtoD128(aTHX_ d128, ld);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        LDtoD128(aTHX_ d128, ld);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 void
 D128toLD (ld, d128)
 	SV *	ld
 	SV *	d128
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	D128toLD(aTHX_ ld, d128);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        D128toLD(aTHX_ ld, d128);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 void
 DESTROY (rop)
 	SV *	rop
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	DESTROY(aTHX_ rop);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        DESTROY(aTHX_ rop);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 void
-_assignME (a, mantissa, c)
+assignNaNl (a)
 	SV *	a
-	char *	mantissa
-	SV *	c
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	_assignME(aTHX_ a, mantissa, c);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        assignNaNl(aTHX_ a);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 void
-assignPV (a, str)
-	SV *	a
-	char *	str
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	assignPV(aTHX_ a, str);
-	if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
-
-void
-assignNaN (a)
-	SV *	a
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	assignNaN(aTHX_ a);
-	if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
-
-void
-assignInf (a, sign)
+assignInfl (a, sign)
 	SV *	a
 	int	sign
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	assignInf(aTHX_ a, sign);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        assignInfl(aTHX_ a, sign);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 SV *
 _overload_add (a, b, third)
@@ -1621,50 +1795,50 @@ OUTPUT:  RETVAL
 void
 _D128toME (a)
 	SV *	a
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	_D128toME(aTHX_ a);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _D128toME(aTHX_ a);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 void
 _c2ld (mantissa)
 	char *	mantissa
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	_c2ld(aTHX_ mantissa);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _c2ld(aTHX_ mantissa);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 void
 _c2d (mantissa)
 	char *	mantissa
-	PREINIT:
-	I32* temp;
-	PPCODE:
-	temp = PL_markstack_ptr++;
-	_c2d(aTHX_ mantissa);
-	if (PL_markstack_ptr != temp) {
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _c2d(aTHX_ mantissa);
+        if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
-	  PL_markstack_ptr = temp;
-	  XSRETURN_EMPTY; /* return empty stack */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
         }
         /* must have used dXSARGS; list context implied */
-	return; /* assume stack size is correct */
+        return; /* assume stack size is correct */
 
 SV *
 _wrap_count ()
@@ -1679,4 +1853,52 @@ CODE:
   RETVAL = _get_xs_version (aTHX);
 OUTPUT:  RETVAL
 
+
+void
+_get_byte (p, i, b)
+	void *	p
+	int	i
+	char *	b
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _get_byte(p, i, b);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
+void
+_d128_bytes (sv)
+	SV *	sv
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _d128_bytes(aTHX_ sv);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
+SV *
+_endianness ()
+CODE:
+  RETVAL = _endianness (aTHX);
+OUTPUT:  RETVAL
+
+
+SV *
+_bid_mant (bin)
+	SV *	bin
+CODE:
+  RETVAL = _bid_mant (aTHX_ bin);
+OUTPUT:  RETVAL
 

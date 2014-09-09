@@ -27,6 +27,16 @@ my %options = %{
   INC => '',
   LICENSE  => 'perl',
   VERSION_FROM => 'Decimal128.pm',
+  META_MERGE => {
+   'meta-spec' => { version => 2 },
+    resources => {
+      repository => {
+        type => 'git',
+        url => 'https://github.com/sisyphus/math-decimal128.git',
+        web => 'https://github.com/sisyphus/math-decimal128',
+      },
+    },
+  },
 }
 };
 WriteMakefile(%options);

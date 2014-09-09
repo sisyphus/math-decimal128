@@ -87,33 +87,33 @@ else {
   print "not ok 11\n";
 }
 
-my $pos_test = Math::Decimal128::_testvalD128(1);
-my $neg_test = Math::Decimal128::_testvalD128(-1);
+my $pos_test = Math::Decimal128::_testvalD128_2(1);
+my $neg_test = Math::Decimal128::_testvalD128_2(-1);
 
 ($man, $exp) = D128toME($pos_test);
-if($man eq '9307199254740993' && $exp == -15) {print "ok 12\n"}
+if($man eq '2547409938307199254740993' && $exp == 0) {print "ok 12\n"}
 else {print "not ok 12\n"}
 
 
 ($man, $exp) = D128toME($neg_test);
-if($man eq '-9307199254740993' && $exp == -15) {print "ok 13\n"}
+if($man eq '-2547409938307199254740993' && $exp == 0) {print "ok 13\n"}
 else {print "not ok 13\n"}
 
-my $pos_check = Math::Decimal128->new('9307199254740993', -15);
+my $pos_check = Math::Decimal128->new('2547409938307199254740993', 0);
 if($pos_check == $pos_test) {print "ok 14\n"}
 else {
   warn "\$pos_check: $pos_check\n";
   print "not ok 14\n";
 }
 
-my $neg_check = Math::Decimal128->new('-9307199254740993', -15);
+my $neg_check = Math::Decimal128->new('-2547409938307199254740993', 0);
 if($neg_check == $neg_test) {print "ok 15\n"}
 else {
   warn "\$neg_check: $neg_check\n";
   print "not ok 15\n";
 }
 
-my $pv_check = PVtoD128('-9307199254740993e-15');
+my $pv_check = PVtoD128('-2547409938307199254740993e0');
 
 if($pv_check == $neg_test) {print "ok 16\n"}
 else {
@@ -121,8 +121,8 @@ else {
  print "not ok 16\n";
 }
 
-my $shift = Exp10(-15);
-my $cancel = Exp10(15);
+my $shift = Exp10l(-15);
+my $cancel = Exp10l(15);
 
 if($shift * $cancel == UnityD128(1)){print "ok 17\n"}
 else {
@@ -130,7 +130,7 @@ else {
   print "not ok 17\n";
 }
 
-my $pv_check2 = PVtoD128('-9307199254740993');
+my $pv_check2 = PVtoD128('-2547409938307199254740993e15');
 $pv_check2 *= $shift;
 
 if($pv_check2 == $neg_test) {print "ok 18\n"}
@@ -165,9 +165,9 @@ else {
   print "not ok 22\n";
 }
 
-my $mintest4 = MEtoD128('4', -399);
-my $mintest5 = MEtoD128('5', -399);
-my $mintest6 = MEtoD128('6', -399);
+my $mintest4 = MEtoD128('4', -6177);
+my $mintest5 = MEtoD128('5', -6177);
+my $mintest6 = MEtoD128('6', -6177);
 
 if(is_ZeroD128($mintest4) && $mintest4 == $mintest5) { print "ok 23\n"}
 else {
@@ -181,7 +181,7 @@ else {
   print "not ok 24\n";
 }
 
-my $maxtest = MEtoD128('1000000000000000', 369);
+my $maxtest = MEtoD128('1000000000000000000000000000000000', 6111);
 
 $maxtest *= MEtoD128('1', 1);
 
@@ -206,7 +206,7 @@ else {
   print "not ok 27\n";
 }
 
-if(is_InfD128(DEC128_MAX() + MEtoD128('1', 369)) == 1) {print "ok 28\n"}
+if(is_InfD128(DEC128_MAX() + MEtoD128('1', 6111)) == 1) {print "ok 28\n"}
 else {
   warn "\n", DEC128_MAX() + MEtoD128('1', 369), "\n";
   print "not ok 28\n";
@@ -233,7 +233,7 @@ else {
   print "not ok 31\n";
 }
 
-if(is_InfD128(DEC128_MAX() * UnityD128(-1) - MEtoD128('1', 369)) == -1) {print "ok 32\n"}
+if(is_InfD128(DEC128_MAX() * UnityD128(-1) - MEtoD128('1', 6111)) == -1) {print "ok 32\n"}
 else {
   warn "\n", DEC128_MAX() * UnityD128(-1) - MEtoD128('1', 369), "\n";
   print "not ok 32\n";

@@ -7,3 +7,16 @@ Changes
 
 t/aab_basic.t
 t/boundaries.t
+t/decode_d128.t
+t/conv.t
+t/dec_inc.t
+t/general.t
+t/IV_arith.t
+t/lengthy_mantissa.t
+t/new.t
+t/overload_cmp.t
+t/overload_int.t
+t/overload_spaceship.t
+t/pod.t
+t/reassign.t
+t/UV_cmp.t

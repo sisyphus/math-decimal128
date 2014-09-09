@@ -31,7 +31,7 @@ else {
 
 my $nan = NaND128();
 ($man, $exp) = D128toME($nan);
-if($man != $man && $exp == 0) {print "ok 3\n"}
+if(($man != $man || $man =~ /nan/i) && $exp == 0) {print "ok 3\n"}
 else {
   warn "\$man: $man \$exp: $exp\n";
   print "not ok 3\n";
@@ -39,13 +39,14 @@ else {
 
 my $inf = InfD128(-1);
 ($man, $exp) = D128toME($inf);
+
 if(($inf / $inf) != ($inf /$inf) && $exp == 0) {print "ok 4\n"}
 else {
   warn "\$man: $man \$exp: $exp\n";
   print "not ok 4\n";
 }
 
-if(($man / $man) != ($man /$man) && $exp == 0) {print "ok 5\n"}
+if(($man =~ /inf/i || ($man / $man) != ($man /$man)) && $exp == 0) {print "ok 5\n"}
 else {
   warn "\$man: $man \$exp: $exp\n";
   print "not ok 5\n";

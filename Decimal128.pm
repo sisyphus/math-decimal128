@@ -432,6 +432,7 @@ sub new {
 sub D128toME {
     my($ret1, $ret2) = split /e/i, decode_d128($_[0]);
     $ret2 = 0 unless defined $ret2;
+    $ret2 = 0 if is_ZeroD128($_[0]);
     return ($ret1, $ret2);
 }
 

@@ -206,7 +206,7 @@ SV * UnityD128(pTHX_ int sign) {
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
-     *d128 = 1e0DL;
+     *d128 = 1.DL;
      /* *d128 = (D128)strtold("1e0", NULL); */
      if(sign < 0) *d128 *= -1;
 
@@ -358,7 +358,7 @@ SV * _MEtoD128(pTHX_ char * msd, char * nsd, char * lsd, SV * exponent) {
      return obj_ref;
 }
 
-void _assignMEl(pTHX_ SV * a, char * msd, char * nsd, char * lsd, SV * c) {
+void _assignME(pTHX_ SV * a, char * msd, char * nsd, char * lsd, SV * c) {
      long double man;
      int exp = (int)SvIV(c), i;
 
@@ -427,27 +427,6 @@ SV * IVtoD128(pTHX_ SV * x) {
      obj = newSVrv(obj_ref, "Math::Decimal128");
 
      *d128 = (D128)SvIV(x);
-
-     sv_setiv(obj, INT2PTR(IV,d128));
-     SvREADONLY_on(obj);
-     return obj_ref;
-}
-
-SV * PVtoD128(pTHX_ char * x) {
-     D128 * d128;
-     long double temp;
-     char * ptr;
-     SV * obj_ref, * obj;
-
-     temp = strtold(x, &ptr);
-
-     Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in PVtoD128(aTHX) function");
-
-     obj_ref = newSV(0);
-     obj = newSVrv(obj_ref, "Math::Decimal128");
-
-     *d128 = (D128)temp;
 
      sv_setiv(obj, INT2PTR(IV,d128));
      SvREADONLY_on(obj);
@@ -1087,112 +1066,6 @@ SV * is_ZeroD128(pTHX_ SV * b) {
      croak("Invalid argument supplied to Math::Decimal128::is_ZeroD128 function");
 }
 
-void _D128toME(pTHX_ SV * a) {
-     dXSARGS;
-     D128 t;
-     char * buffer;
-     int count = 0;
-
-     if(sv_isobject(a)) {
-       const char *h = HvNAME(SvSTASH(SvRV(a)));
-       if(strEQ(h, "Math::Decimal128")) {
-          t = *(INT2PTR(D128 *, SvIV(SvRV(a))));
-          if(_is_nan(t) || _is_inf(t) || t == 0.DL) {
-            EXTEND(SP, 2);
-            ST(0) = sv_2mortal(newSVnv(t));
-            ST(1) = sv_2mortal(newSViv(0));
-            XSRETURN(2);
-          }
-
-          /* At this stage we know the arg is not a D128 infinity/0, but on powerpc it might be a
-             long double that's outside the allowable range */
-#if defined(__powerpc__) || defined(_ARCH_PPC) || defined(_M_PPC) || defined(__PPCGECKO__) || defined(__PPCBROADWAY__)
-          if((long double)t > LDBL_MAX ||
-             (long double)t < -LDBL_MAX) {
-            count = 150;
-            t *= 1e-150DL; /* (long double)t should now be in range */
-          }
-
-          if((long double)t <  LDBL_MIN * 128.L &&
-             (long double)t > -LDBL_MIN * 128.L) {
-            count = -150;
-            t *= 1e150DL; /* (long double)t should now be in range */
-          }
-#endif
-          Newx(buffer, 32, char);
-          if(buffer == NULL)croak("Couldn't allocate memory in _D128toME");
-          sprintf(buffer, "%.15Le", (long double)t);
-          EXTEND(SP, 3);
-          ST(0) = sv_2mortal(newSVpv(buffer, 0));
-          ST(1) = &PL_sv_undef;
-          ST(2) = sv_2mortal(newSViv(count)); /* count will be added to the exponent in D128toME() perl sub. */
-          Safefree(buffer);
-          XSRETURN(3);
-       }
-       else croak("Invalid object supplied to Math::Decimal128::D128toME function");
-     }
-     else croak("Invalid argument supplied to Math::Decimal128::D128toME function");
-}
-
-/* Replaced by newer rendition (above) that caters for the case that the long double
-   has the same exponent range as the double - eg. powerpc "double-double arithmetic".
-void _D128toME(aTHX_ SV * a) {
-     dXSARGS;
-     D128 t;
-     char * buffer;
-
-     if(sv_isobject(a)) {
-       const char *h = HvNAME(SvSTASH(SvRV(a)));
-       if(strEQ(h, "Math::Decimal128")) {
-          EXTEND(SP, 2);
-          t = *(INT2PTR(D128 *, SvIV(SvRV(a))));
-          if(_is_nan(t) || _is_inf(t) || t == 0.DL) {
-            ST(0) = sv_2mortal(newSVnv(t));
-            ST(1) = sv_2mortal(newSViv(0));
-            XSRETURN(2);
-          }
-
-          Newx(buffer, 32, char);
-          sprintf(buffer, "%.15Le", (long double)t);
-          ST(0) = sv_2mortal(newSVpv(buffer, 0));
-          ST(1) = &PL_sv_undef;
-          Safefree(buffer);
-          XSRETURN(2);
-       }
-       else croak("Invalid object supplied to Math::Decimal128::D128toME function");
-     }
-     else croak("Invalid argument supplied to Math::Decimal128::D128toME function");
-}
-*/
-
-void _c2ld(pTHX_ char * mantissa) { /* convert using %.15Le */
-     dXSARGS;
-     long double man;
-     char *ptr, *buffer;
-
-     man = strtold(mantissa, &ptr);
-     Newx(buffer, 32, char);
-     sprintf(buffer, "%.15Le", man);
-
-     ST(0) = sv_2mortal(newSVpv(buffer, 0));
-     Safefree(buffer);
-     XSRETURN(1);
-}
-
-void _c2d(pTHX_ char * mantissa) { /* convert using %.15e */
-     dXSARGS;
-     double man;
-     char *ptr, *buffer;
-
-     man = strtod(mantissa, &ptr);
-     Newx(buffer, 32, char);
-     sprintf(buffer, "%.15e", man);
-
-     ST(0) = sv_2mortal(newSVpv(buffer, 0));
-     Safefree(buffer);
-     XSRETURN(1);
-}
-
 SV * _wrap_count(pTHX) {
      return newSVuv(PL_sv_count);
 }
@@ -1213,7 +1086,7 @@ void _d128_bytes(pTHX_ SV * sv) {
 
   sp = mark;
 
-#ifdef BENDIAN
+#ifdef WE_HAVE_BENDIAN
   for (i = 0; i < n; i++) {
 #else
   for (i = n - 1; i >= 0; i--) {
@@ -1225,16 +1098,6 @@ void _d128_bytes(pTHX_ SV * sv) {
   PUTBACK;
   Safefree(buff);
   XSRETURN(n);
-}
-
-SV * _endianness(pTHX) {
-#if defined(WE_HAVE_BENDIAN)
-  return newSVpv("Big Endian", 0);
-#elif defined(WE_HAVE_LENDIAN)
-  return newSVpv("Little Endian", 0);
-#else
-  return &PL_sv_undef;
-#endif
 }
 
 SV * _bid_mant(pTHX_ SV * bin) {
@@ -1299,6 +1162,16 @@ SV * _bid_mant(pTHX_ SV * bin) {
   SvREADONLY_on(obj);
   return obj_ref;
 
+}
+
+SV * _endianness(pTHX) {
+#if defined(WE_HAVE_BENDIAN)
+  return newSVpv("Big Endian", 0);
+#elif defined(WE_HAVE_LENDIAN)
+  return newSVpv("Little Endian", 0);
+#else
+  return &PL_sv_undef;
+#endif
 }
 
 
@@ -1416,7 +1289,7 @@ CODE:
 OUTPUT:  RETVAL
 
 void
-_assignMEl (a, msd, nsd, lsd, c)
+_assignME (a, msd, nsd, lsd, c)
 	SV *	a
 	char *	msd
 	char *	nsd
@@ -1426,7 +1299,7 @@ _assignMEl (a, msd, nsd, lsd, c)
         I32* temp;
         PPCODE:
         temp = PL_markstack_ptr++;
-        _assignMEl(aTHX_ a, msd, nsd, lsd, c);
+        _assignME(aTHX_ a, msd, nsd, lsd, c);
         if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;
@@ -1454,13 +1327,6 @@ IVtoD128 (x)
 	SV *	x
 CODE:
   RETVAL = IVtoD128 (aTHX_ x);
-OUTPUT:  RETVAL
-
-SV *
-PVtoD128 (x)
-	char *	x
-CODE:
-  RETVAL = PVtoD128 (aTHX_ x);
 OUTPUT:  RETVAL
 
 SV *
@@ -1788,54 +1654,6 @@ CODE:
   RETVAL = is_ZeroD128 (aTHX_ b);
 OUTPUT:  RETVAL
 
-void
-_D128toME (a)
-	SV *	a
-        PREINIT:
-        I32* temp;
-        PPCODE:
-        temp = PL_markstack_ptr++;
-        _D128toME(aTHX_ a);
-        if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-          PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
-
-void
-_c2ld (mantissa)
-	char *	mantissa
-        PREINIT:
-        I32* temp;
-        PPCODE:
-        temp = PL_markstack_ptr++;
-        _c2ld(aTHX_ mantissa);
-        if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-          PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
-
-void
-_c2d (mantissa)
-	char *	mantissa
-        PREINIT:
-        I32* temp;
-        PPCODE:
-        temp = PL_markstack_ptr++;
-        _c2d(aTHX_ mantissa);
-        if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-          PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
-
 SV *
 _wrap_count ()
 CODE:
@@ -1867,16 +1685,16 @@ _d128_bytes (sv)
         return; /* assume stack size is correct */
 
 SV *
-_endianness ()
-CODE:
-  RETVAL = _endianness (aTHX);
-OUTPUT:  RETVAL
-
-
-SV *
 _bid_mant (bin)
 	SV *	bin
 CODE:
   RETVAL = _bid_mant (aTHX_ bin);
 OUTPUT:  RETVAL
+
+SV *
+_endianness ()
+CODE:
+  RETVAL = _endianness (aTHX);
+OUTPUT:  RETVAL
+
 

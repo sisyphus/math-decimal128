@@ -45,19 +45,19 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
 @Math::Decimal128::EXPORT = ();
 @Math::Decimal128::EXPORT_OK = qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV LDtoD128 D128toLD assignPVl assignNaNl assignInfl
+    have_strtod128 D128toNV LDtoD128 D128toLD assignNaNl assignInfl D128toME
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
-    assignMEl d128_bytes MEtoD128 hex2binl decode_bidl
+    assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV LDtoD128 D128toLD assignPVl assignNaNl assignInfl
+    have_strtod128 D128toNV LDtoD128 D128toLD assignNaNl assignInfl D128toME
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
-    assignMEl d128_bytes MEtoD128 hex2binl decode_bidl
+    assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     )]);
 
-%Math::Decimal128::dpd_correlation = 1 ? (
+%Math::Decimal128::dpd_correlation = d128_fmt() eq 'DPD' ? (
      '0000000000' => '000', '0000000001' => '001', '0000000010' => '002', '0000000011' => '003',
      '0000000100' => '004', '0000000101' => '005', '0000000110' => '006', '0000000111' => '007',
      '0000001000' => '008', '0000001001' => '009', '0000010000' => '010', '0000010001' => '011',
@@ -310,7 +310,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
      '1110011110' => '996', '1110011111' => '997', '0011111110' => '998', '0011111111' => '999',
 ) : ();
 
-%Math::Decimal128::bid_decode = 1 ? (
+%Math::Decimal128::bid_decode = d128_fmt() eq 'BID' ? (
  0 => MEtoD128('1' . ('0' x 33), 0), 1 => MEtoD128('1' . ('0' x 32), 0),
  2 => MEtoD128('1' . ('0' x 31), 0), 3 => MEtoD128('1' . ('0' x 30), 0),
  4 => MEtoD128('1' . ('0' x 29), 0), 5 => MEtoD128('1' . ('0' x 28), 0),
@@ -422,7 +422,7 @@ sub new {
       return PVtoD128($arg);
     }
 
-    if($type == 128) { # Math::Decimal128 object
+    if($type == 34) { # Math::Decimal128 object
       return D128toD128($arg);
     }
 
@@ -430,12 +430,9 @@ sub new {
 }
 
 sub D128toME {
-    return ('-0', '0') if (is_ZeroD128($_[0]) == -1); # Negative Zero.
-    my @ret = _D128toME($_[0]);
-    if(!defined($ret[1])) {
-      @ret = _sci2me($ret[0], $ret[2]);
-    }
-    return @ret;
+    my($ret1, $ret2) = split /e/i, decode_d128($_[0]);
+    $ret2 = 0 unless defined $ret2;
+    return ($ret1, $ret2);
 }
 
 sub MEtoD128 {
@@ -478,25 +475,38 @@ sub MEtoD128 {
 
 sub assignMEl {
   # Check that 3 args are supplied
-  die "assignME takes 3 args" if @_ != 3;
+  die "assignMEl takes 3 args" if @_ != 3;
 
   my $arg1 = shift;
   my $arg2 = shift;
   my $arg3 = shift;
 
-  die "Invalid 1st arg ($arg1) to assignME" if _itsa($arg1) != 128;
-  die "Invalid 2nd arg ($arg2) to assignME" if $arg2 =~ /[^0-9\-]/;
-  die "Invalid 3rd arg ($arg3) to assignME" if $arg3 =~ /[^0-9\-]/;
+  die "Invalid 1st arg ($arg1) to assignMEl" if _itsa($arg1) != 34;
+  die "Invalid 2nd arg ($arg2) to assignMEl" if $arg2 =~ /[^0-9\-]/;
+  die "Invalid 3rd arg ($arg3) to assignMEl" if $arg3 =~ /[^0-9\-]/;
 
   my $len_2 = length($arg2);
-  $len_2-- if $arg2 =~ /^\-/;
+  my $sign = $arg2 =~ /^\-/ ? '-' : '';
+  if($sign) {
+    $len_2--;
+    $arg2 =~ s/^\-//;
+  }
 
   if($len_2 > 34) {
     die "$arg2 exceeds _Decimal128 precision.",
         " It needs to be shortened to no more than 34 decimal digits";
   }
 
-  return _assignME($arg1, $arg2, $arg3);
+  my($msd, $nsd, $lsd);
+
+  {
+  no warnings 'substr';
+  $msd = substr($arg2, -34, 10) || '0';
+  $nsd = substr($arg2, -24, 12) || '0';
+  $lsd = substr($arg2, -12, 12) || '0';
+  }
+
+  return _assignME($arg1, $sign . $msd, $sign . $nsd, $sign . $lsd, $arg3);
 
 }
 
@@ -523,8 +533,80 @@ sub d128_bytes {
 sub hex2binl {
     my $ret = unpack("B*", (pack "H*", $_[0]));
     my $len = length $ret;
-    die "hex2bin() yielded $len bits" if $len != 128;
+    die "hex2binl() yielded $len bits" if $len != 128;
     return $ret;
+}
+
+sub d128_fmt {
+  my $d128 = MEtoD128('99', 0);
+  return 'DPD' if d128_bytes($d128) =~ /000$/;
+  return 'BID' if d128_bytes($d128) =~ /063$/;
+  return 'Unknown';
+}
+
+sub decode_dpdl {
+  # Takes the Math::Decimal128 object as its arg.
+  # Decodes Densely Packed Decimal formatting of the Decimal128 value.
+  my $binstring = hex2binl(d128_bytes($_[0]));
+  my @first = decode_dpd_1st($binstring);
+  return ($first[0] . $first[1]) if ($first[1] =~ /inf/i || $first[1] =~ /nan/i);
+  my $mantissa = $first[1] . decode_dpd_2nd($binstring);
+
+  # Remove leading zeroes from the mantissa
+  $mantissa =~ s/^0+//;
+  if($mantissa eq '') {$mantissa = '0'}
+  else {
+    # Remove trailing zeroes
+    while($mantissa =~ /0$/) {
+      $mantissa =~ s/0$//;
+      $first[2]++;
+    }
+  }
+
+  my $ret = $first[0] . $mantissa . 'e' . $first[2];
+
+}
+
+sub decode_dpd_1st{
+  # Takes the entire binary string as its arg.
+  die "Argument to decode_dpd_1st is wrong size (", length($_[0]), ")"
+    if length($_[0]) != 128;
+  my $leading_bits = 18;
+  my $trailing_bits = 110;
+  my $msd;                  # significand's most siginificant digit
+  my $exp;                  # exponent
+  my $keep = substr($_[0], 0, $leading_bits);
+  my $sign = substr($keep, 0, 1) ? '-' : '';
+  return ('','nan') if substr($keep, 1, 5) eq '11111';
+  if(substr($keep, 1 ,5) eq '11110') {return ($sign, 'inf')}
+  my $pre = substr($keep, 1, 2);
+  if($pre eq '00' || $pre eq '01' || $pre eq '10') {
+    $msd = oct('0b0' . substr($keep, 3, 3));
+    $exp = oct('0b' . $pre . substr($keep, 6, 12)) - 6176;
+    return ($sign, $msd, $exp);
+  }
+  $pre = substr($keep, 1, 4);
+  if($pre eq '1100' || $pre eq '1101' || $pre eq '1110') {
+    $exp = oct('0b' . substr($pre, 2, 2) . substr($keep, 6, 12)) - 6176;
+    $msd = oct('0b' .  '100' . substr($keep, 5, 1));
+    return ($sign, $msd, $exp);
+  }
+  die "decode_dpd_1st function failed to parse its argument ($_[0])";
+}
+
+sub decode_dpd_2nd {
+  # Takes the entire binary string as its arg.
+  die "Argument to decode_dpd_2nd is wrong size (", length($_[0]), ")"
+    if length($_[0]) != 128;
+  my $leading_bits = 18;
+  my $trailing_bits = 110;
+  my $keep = substr($_[0], $leading_bits, $trailing_bits);
+  my $ret = '';
+  for my $i(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100) {
+    my $key = substr($keep, $i, 10);
+    $ret .= $Math::Decimal128::dpd_correlation{$key};
+  }
+  return $ret;
 }
 
 sub decode_bidl {
@@ -575,5 +657,18 @@ sub decode_bidl {
   }
   die "decode_bid function failed to parse its argument ($_[0])";
 }
+
+sub PVtoD128 {
+  my($arg1, $arg2) = split /e/i, $_[0];
+  $arg2 = 0 unless defined $arg2;
+  my @split = split /\./, $arg1;
+  $split[1] = '' unless defined $split[1];
+  $arg2 -= length($split[1]);
+  $arg1 =~ s/\.//;
+  $arg1 =~ s/^0+//;
+  return MEtoD128($arg1, $arg2);
+}
+
+*decode_d128 = d128_fmt() eq 'DPD' ? \&decode_dpdl : \&decode_bidl;
 
 1;

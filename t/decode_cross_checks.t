@@ -4,15 +4,14 @@ use Math::Decimal128 qw(:all);
 
 my $t = 4;
 
-print "1..$t\n";
-
-sub random_select {
-  my $ret = '';
-  for(1 .. $_[0]) {
-    $ret .= int(rand(10));
-  }
-  return "$ret";
+if(d128_fmt() == 'DPD') {
+  warn "Skipping all tests for DPD format\n";
+  print "1..1\n";
+  print "ok 1\n";
+  exit 0;
 }
+
+print "1..$t\n";
 
 my $ok = 1;
 
@@ -196,4 +195,10 @@ for my $exp(0..10, 20, 30, 280 .. 300, 6090..6100) {
 $ok ? print "ok 4\n" : print "not ok 4\n";
 
 
-
+sub random_select {
+  my $ret = '';
+  for(1 .. $_[0]) {
+    $ret .= int(rand(10));
+  }
+  return "$ret";
+}

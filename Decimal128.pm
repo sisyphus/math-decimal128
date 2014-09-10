@@ -48,6 +48,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     have_strtod128 D128toNV LDtoD128 D128toLD assignNaNl assignInfl D128toME
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
+    get_exp get_sign
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
@@ -55,6 +56,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     have_strtod128 D128toNV LDtoD128 D128toLD assignNaNl assignInfl D128toME
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
+    get_exp get_sign
     )]);
 
 %Math::Decimal128::dpd_correlation = d128_fmt() eq 'DPD' ? (
@@ -668,6 +670,32 @@ sub PVtoD128 {
   $arg1 =~ s/\.//;
   $arg1 =~ s/^0+//;
   return MEtoD128($arg1, $arg2);
+}
+
+sub get_exp {
+  my $keep = hex2binl(d128_bytes($_[0]));
+  my $pre = substr($keep, 1, 2);
+  if(d128_fmt() eq 'DPD') {
+    if($pre eq '00' || $pre eq '01' || $pre eq '10') {
+      return oct('0b' . $pre . substr($keep, 6, 12)) - 6176;
+    }
+    else {
+      return oct('0b' . substr($pre, 2, 2) . substr($keep, 6, 12)) - 6176;
+    }
+  }
+  else {
+    if($pre eq '00' || $pre eq '01' || $pre eq '10') {
+      return oct('0b' . substr($keep, 1, 14)) - 6176;
+    }
+    else {
+      return oct('0b' . substr($keep, 3, 14)) - 6176;
+    }
+  }
+}
+
+sub get_sign {
+  return '-' if hex(substr(d128_bytes($_[0]), 0, 1)) >= 8;
+  return '+';
 }
 
 *decode_d128 = d128_fmt() eq 'DPD' ? \&decode_dpdl : \&decode_bidl;

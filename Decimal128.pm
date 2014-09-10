@@ -45,18 +45,18 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
 @Math::Decimal128::EXPORT = ();
 @Math::Decimal128::EXPORT_OK = qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV LDtoD128 D128toLD assignNaNl assignInfl D128toME
+    have_strtod128 D128toNV assignNaNl assignInfl D128toME
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
-    get_exp get_sign
+    get_expl get_signl
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV LDtoD128 D128toLD assignNaNl assignInfl D128toME
+    have_strtod128 D128toNV assignNaNl assignInfl D128toME
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
-    get_exp get_sign
+    get_expl get_signl
     )]);
 
 %Math::Decimal128::dpd_correlation = d128_fmt() eq 'DPD' ? (
@@ -672,7 +672,7 @@ sub PVtoD128 {
   return MEtoD128($arg1, $arg2);
 }
 
-sub get_exp {
+sub get_expl {
   my $keep = hex2binl(d128_bytes($_[0]));
   my $pre = substr($keep, 1, 2);
   if(d128_fmt() eq 'DPD') {
@@ -693,7 +693,7 @@ sub get_exp {
   }
 }
 
-sub get_sign {
+sub get_signl {
   return '-' if hex(substr(d128_bytes($_[0]), 0, 1)) >= 8;
   return '+';
 }
@@ -701,3 +701,320 @@ sub get_sign {
 *decode_d128 = d128_fmt() eq 'DPD' ? \&decode_dpdl : \&decode_bidl;
 
 1;
+
+__END__
+
+=head1 NAME
+
+Math::Decimal128 - perl interface to C's _Decimal128 operations.
+
+=head1 DEPENDENCIES
+
+   In order to compile this module, a C compiler that provides
+   the _Decimal128 type is needed.
+
+=head1 DESCRIPTION
+
+   Math::Decimal128 supports up to 34 decimal digits of significand
+   (mantissa) and an exponent range of -6143 to +6144.
+   The smallest expressable value is
+     -9.999999999999999999999999999999999e6144 which is also
+   equivalent to
+     -9.999999999999999999999999999999999e6111.
+   The largest expressable value is
+     9.999999999999999999999999999999999e6144 which is also
+   equivalent to
+     9.999999999999999999999999999999999e6111.
+   The closest we can get to zero is (plus or minus) 1e-6176
+   (which is also equivalent to
+     1000000000000000000000000000000000e-6143).
+
+   This module allows decimal floating point arithmetic via
+   operator overloading - see "OVERLOADING".
+
+   In the documentation that follows, "$mantissa" is a perl scalar
+   holding a string of up to 16 decimal digits:
+    $mantissa = '1234';
+    $mantissa = '1234567890123456';
+
+=head1 SYNOPSIS
+
+   use Math::Decimal128 qw(:all);
+
+   my $d128_1 = MEtoD128('9927', -2); # the decimal 99.27
+   my $d128_2 = MEtoD128('3', 0);     # the decimal 3.0
+   $d128_1 /= $d128_2;
+   print $d128_1; # prints 3309e-2 (33.09)
+
+=head1 OVERLOADING
+
+   The following operations are overloaded:
+    + - * /
+    += -= *= /=
+    != == <= >= <=> < >
+    ++ --
+    =
+    abs bool int print
+
+    Arguments to the overloaded operations must be Math::Decimal128
+    objects or integer (IV/UV) values.
+
+     $d128_2 = $d128_1 + 15; # ok
+
+     $d128_2 = $d128_1 + 3.1; # Error. Best to either:
+     $d128_2 = $d128_1 + MEtoD128('31',-1); # or (equivalentally):
+     $d128_2 = $d128_1 + Math::Decimal128->new('31',-1);
+
+=head1 CREATION & ASSIGNMENT FUNCTIONS
+
+    The following create and assign a new Math::Decimal128 object.
+
+     ###################################
+     # Assign from mantissa and exponent
+     $d128 = MEtoD128($mantissa, $exponent);
+
+      eg: $d128 = MEtoD128('12345', -3); # 12.345
+
+      It's a little kludgy, but this is the safest and surest way
+      of creating the Math::Decimal128 object with the intended
+      value.
+      Checks are conducted to ensure that the arguments are suitable.
+      The mantissa string must represent an integer.
+
+     ######################
+     # Assign from a string
+     $d128 = PVtoD128($string);
+
+      eg: $d128 = PVtoD128('-9427199254740993');
+          $d128 = PVtoD128('-9307199254740993e-15');
+          $d128 = Math::Decimal128->new('-9787199254740993');
+          $d128 = Math::Decimal128->new('-9307199254740993e-23');
+
+      Transforms the string into args suitable for MEtoD128(),
+      then uses that function to create the Math::Decimal128 object.
+
+     #####################################
+     # Assign from a UV (unsigned integer)
+     $d128 = UVtoD128($uv);
+
+      eg: $d128 = UVtoD128(~0);
+
+      Doing Math::Decimal128->new($uv) will also create and assign
+      using UVtoD128().
+      Assigns the UV value to the Math::Decimal128 object.
+
+     ####################################
+     # Assign from an IV (signed integer)
+     $d128 = IVtoD128($iv);
+
+      eg: $d128 = IVtoD128(-15); # -15.0
+
+      Doing Math::Decimal128->new($iv) will also create and assign
+      using IVtoD128().
+      Assigns the UV value to the Math::Decimal128 object.
+
+     ################################################
+     # Assign from an existing Math::Decimal128 object
+     $d128 = D128toD128($d128_0);
+     Also:
+      $d128 = Math::Decimal128->new($d128_0);
+      $d128 = $d128_0; # uses overloaded '='
+
+     ###########################
+     # Assign from an NV (real))
+     $d128 = NVtoD128($nv);
+
+      eg: $d128 = NVtoD128(-3.25);
+
+      Doing Math::Decimal128->new($nv) will also create and assign
+      using NVtoD128().
+      Might not always assign the value you think it does. (Eg,
+      see test 5 in t/overload_cmp.t.)
+
+     ####################
+     # Assign using new()
+     $d128 = Math::Decimal128->new([$arg1, [$arg2]]);
+      This function calls one of the above functions. It
+      determines the appropriate function to call by examining
+      the argument(s) provided.
+      If no argument is provided, a Math::Decimal128 object
+      with a value of NaN is returned.
+      If 2 arguments are supplied it uses MEtoD128().
+      If one argument is provided, that arg's internal flags are
+      used to determine the appropriate function to call.
+
+     #######################
+     # Assign using STRtoD128
+     $d128 = STRtoD128($string);
+      If your C compiler provides the strtod128 function &&
+      you configured the Makefile.PL to enable access to that
+      function then you can use this function.
+      usage is is as for PVtoD128().
+
+     ##############################
+
+=head1 ASSIGN A NEW VALUE TO AN EXISTING OBJECT
+
+     assignMEl($d128, $mantissa, $exponent);
+      Assigns the value represented by ($mantissa, $exponent)
+      to the Math::Decimal128 object, $d128.
+
+      eg: assignMEl($d128, '123459', -6); # 0.123459
+
+     assignPV($d128, $string);
+      Assigns the value represented by $string to the
+      Math::Decimal128 object, $d128.
+
+      eg: assignPV($d128, '123459e-6'); # 0.123459
+
+     assignNaN($d128);
+      Assigns a NaN to the Math::Decimal128 object, $d128.
+
+     assignInf($d128, $sign);
+      Assigns an Inf to the Math::Decimal128 object, $d128.
+      If $sign is negative, assigns -Inf; otherwise +Inf.
+
+=head1 INF, NAN and ZERO OBJECTS
+
+     $d128 = InfD128($sign);
+      If $sign < 0, creates a new Math::Decimal128 object set to
+      negative infinity; else creates a Math::Decimal128 object set
+      to positive infinity.
+
+     $d128 = NaND128();
+      Creates a new Math::Decimal128 object set to NaN.
+      Same as "$d128 = Math::Decimal128->new();"
+
+     $d128 = ZeroD128($sign);
+      If $sign < 0, creates a new Math::Decimal128 object set to
+      negative zero; else creates a Math::Decimal128 object set to
+      zero.
+
+=head1 RETRIEVAL FUNCTIONS
+
+    The following functions provide ways of seeing the value of
+    Math::Decimal128 objects.
+
+     $string = decode_d128($d128);
+      This function calls either decode_dpd() or decode_bid(),
+      depending upon the formatting used to encode the
+      _Decimal128 value (as determined by the d128_fmt() sub).
+      It returns the value as a string of the form (-)ME, where:
+       "M" is the mantissa, containing up to 34 base 10 digits;
+       "E" is the letter "e" followed by the exponent;
+       A minus sign is prefixed to any -ve number (incl -0), but no
+       sign at all is prefixed for +ve numbers (incl +0).
+      Returns the strings '+inf', '-inf', 'nan' for (respectively)
+      +infinity, -infinity, NaN.
+      The value will be decoded correctly.
+
+     $string = decode_dpd($d128_binary);
+     $string = decode_bid($d128_binary);
+
+      As for decode_d128(), except it takes the 128-bit binary
+      representation of the _Decimal128 value as its argument. This
+      argument is derived from the Math::Decimal128 object ($d128)
+      by doing:
+        $binary = hex2bin(d128_bytes($d128));
+      DPD and BID formats will return different strings - so you
+      need to know which encoding (DPD or BID) was used, and then
+      call the appropriate decode_*() function for that encoding.
+      The d128_fmt() sub will tell you which encoding is in use.
+
+     ($mantissa, $exponent) = D128toME($d128);
+      Returns the value of the Math::Decimal object as a
+      mantissa (string of up to 34 decimal digits) and exponent.
+      You can then manipulate those values to output the
+      value in your preferred format.
+
+     $nv = D128toNV($d128);
+      This function returns the value of the Math::Decimal128
+      object to a perl scalar (NV). It will not translate the value
+      accurately if the precision required to express the value
+      precisely as a _Decimal128 value is greater than the precision
+      provided by the NV.
+
+     print $d128;
+      Will print the value in the format (eg) -12345e-2, which
+      equates to the decimal -123.45. Uses D128toME().
+
+=head1 OTHER FUNCTIONS
+
+     $fmt = d128_fmt();
+      Returns either 'DPD' or 'BID', depending upon whether the
+      (internal) _Decimal128 values are encoded using the 'Densely
+      Packed Decimal' format or the 'Binary Integer Decimal'
+      format.
+
+     $hex = d128_bytes($d128);
+      Returns the hex representation of the _Decimal128 value
+      as a string of 32 hex characters.
+
+     $binary = hex2bin($d128_hex);
+      Takes the string returned by d128_bytes (above) and
+      rewrites it in binary form - ie as a string of 128 base 2
+      digits.
+
+     $d128 = DEC128_MAX; # 9999999999999999999999999999999999e6111
+     $d128 = DEC128_MIN; # 1e-6176
+      DEC128_MAX is the largest positive finite representable
+      _Decimal128 value.
+      DEC128_MIN is the smallest positive non-zero representable
+      _Decimal128 value.
+      Multiply these by -1 to get their negative counterparts.
+
+     $d128 = Exp10l($pow);
+      Returns a Math::Decimal128 object with a value of
+      10 ** $pow, for $pow in the range (-6176 .. 6144). Croaks
+      with appropriate message if $pow is not within that range.
+
+     $bool = have_strtod128();
+      Returns true if, when building Math::Decimal128,
+      the Makefile.PL was configured to make the STRtoD128()
+      function available for your build of Math::Decimal128. Else
+      returns false.
+      (No use making this function available if your compiler's
+      C library doesn't provide the strtod128 function.)
+
+
+     $test = is_ZeroD128($d128);
+      Returns:
+       -1 if $d128 is negative zero;
+        1 if $d128 is a positive zero;
+        0 if $d128 is not zero.
+
+     $test = is_InfD128($d128);
+      Returns:
+       -1 if $d128 is negative infinity;
+        1 if $d128 is positive infinity;
+        0 if $d128 is not infinity.
+
+     $bool = is_NaND128($d128);
+      Returns:
+        1 if $d128 is a NaN;
+        0 if $d128 is not a NaN.
+
+     $sign = get_signl($d128);
+      Returns the sign ('+' or '-') of $d128.
+
+     $exp = get_expl($d128);
+      Returns the exponent of $d128. This is the value that's
+      stored internally within the encapsulated _Decimal28 value;
+      it may differ from the value that you assigned. For example,
+      if you've assigned the value MEtoD128('100', 0) it will
+      probably be held internally as '1e2', not '100e0'.
+
+=head1 LICENSE
+
+    This program is free software; you may redistribute it and/or
+    modify it under the same terms as Perl itself.
+    Copyright 2014 Sisyphus
+
+=head1 AUTHOR
+
+    Sisyphus <sisyphus at(@) cpan dot (.) org>
+
+=cut
+
+
+

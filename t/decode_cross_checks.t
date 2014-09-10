@@ -4,7 +4,7 @@ use Math::Decimal128 qw(:all);
 
 my $t = 4;
 
-if(d128_fmt() == 'DPD') {
+if(d128_fmt() eq 'DPD') {
   warn "Skipping all tests for DPD format\n";
   print "1..1\n";
   print "ok 1\n";
@@ -21,7 +21,7 @@ for my $exp(0..10, 20, 30, 280 .. 300, 6090 .. 6101) {
     $man =~ s/^0+//;
     $man ||= '0';
     my $d128 = MEtoD128($man, $exp);
-    my($s, $e) = (get_sign($d128), get_exp($d128));
+    my($s, $e) = (get_signl($d128), get_expl($d128));
 
     if($s ne '+') {
       $ok = 0;
@@ -30,8 +30,8 @@ for my $exp(0..10, 20, 30, 280 .. 300, 6090 .. 6101) {
 
     $d128 *= Exp10l(-$e);
 
-    if(get_exp($d128)) {
-      warn "Exponent not set to zero (", get_exp($d128), ") for ($man, $exp)\n";
+    if(get_expl($d128)) {
+      warn "Exponent not set to zero (", get_expl($d128), ") for ($man, $exp)\n";
     }
 
     my $check = Math::Decimal128::_decode_mant($d128);
@@ -68,7 +68,7 @@ for my $exp(0..10, 20, 30, 280 .. 300) {
     $man ||= '0';
     $man = '-' . $man;
     my $d128 = MEtoD128($man, $exp);
-    my($s, $e) = (get_sign($d128), get_exp($d128));
+    my($s, $e) = (get_signl($d128), get_expl($d128));
 
     if($s ne '-') {
       $ok = 0;
@@ -77,8 +77,8 @@ for my $exp(0..10, 20, 30, 280 .. 300) {
 
     $d128 *= Exp10l(-$e);
 
-    if(get_exp($d128)) {
-      warn "Exponent not set to zero (", get_exp($d128), ") for ($man, $exp)\n";
+    if(get_expl($d128)) {
+      warn "Exponent not set to zero (", get_expl($d128), ") for ($man, $exp)\n";
     }
 
     my $check = Math::Decimal128::_decode_mant($d128 * UnityD128(-1));
@@ -113,7 +113,7 @@ for my $exp(0..10, 20, 30, 280 .. 300) {
     $man =~ s/^0+//;
     $man ||= '0';
     my $d128 = MEtoD128($man, -$exp);
-    my($s, $e) = (get_sign($d128), get_exp($d128));
+    my($s, $e) = (get_signl($d128), get_expl($d128));
 
     if($s ne '+') {
       $ok = 0;
@@ -122,8 +122,8 @@ for my $exp(0..10, 20, 30, 280 .. 300) {
 
     $d128 *= Exp10l(-$e);
 
-    if(get_exp($d128)) {
-      warn "Exponent not set to zero (", get_exp($d128), ") for ($man, $exp)\n";
+    if(get_expl($d128)) {
+      warn "Exponent not set to zero (", get_expl($d128), ") for ($man, $exp)\n";
     }
 
     my $check = Math::Decimal128::_decode_mant($d128);
@@ -159,7 +159,7 @@ for my $exp(0..10, 20, 30, 280 .. 300, 6090..6100) {
     $man ||= '0';
     $man = '-' . $man;
     my $d128 = MEtoD128($man, -$exp);
-    my($s, $e) = (get_sign($d128), get_exp($d128));
+    my($s, $e) = (get_signl($d128), get_expl($d128));
 
     if($s ne '-') {
       $ok = 0;
@@ -168,8 +168,8 @@ for my $exp(0..10, 20, 30, 280 .. 300, 6090..6100) {
 
     $d128 *= Exp10l(-$e);
 
-    if(get_exp($d128)) {
-      warn "Exponent not set to zero (", get_exp($d128), ") for ($man, $exp)\n";
+    if(get_expl($d128)) {
+      warn "Exponent not set to zero (", get_expl($d128), ") for ($man, $exp)\n";
     }
 
     my $check = Math::Decimal128::_decode_mant($d128 * UnityD128(-1));

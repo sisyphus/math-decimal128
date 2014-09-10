@@ -44,8 +44,8 @@ else {
 
 my $ok = 1;
 
-for my $exp(0..10, 20, 30, 280 .. 300) {
-  for my $digits(1..16) {
+for my $exp(0..10, 20, 30, 280 .. 300, 6090 .. 6100) {
+  for my $digits(1..34) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, $exp);
     my $str = decode_d128($d128);
@@ -65,7 +65,7 @@ $ok ? print "ok 5\n" : print "not ok 5\n";
 $ok = 1;
 
 for my $exp(0..10, 20, 30, 280 .. 300) {
-  for my $digits(1..16) {
+  for my $digits(1..26) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, $exp);
     my $str = decode_d128($d128);
@@ -85,7 +85,7 @@ $ok ? print "ok 6\n" : print "not ok 6\n";
 $ok = 1;
 
 for my $exp(0..10, 20, 30, 280 .. 300) {
-  for my $digits(1..16) {
+  for my $digits(1..26) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
     my $str = decode_d128($d128);

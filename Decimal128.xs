@@ -494,30 +494,6 @@ SV * D128toNV(pTHX_ SV * d128) {
      return newSVnv((NV)(*(INT2PTR(D128*, SvIV(SvRV(d128))))));
 }
 
-void LDtoD128(pTHX_ SV * d128, SV * ld) {
-     if(sv_isobject(d128) && sv_isobject(ld)) {
-       const char *h1 = HvNAME(SvSTASH(SvRV(d128)));
-       const char *h2 = HvNAME(SvSTASH(SvRV(ld)));
-       if(strEQ(h1, "Math::Decimal128") && strEQ(h2, "Math::LongDouble")) {
-         *(INT2PTR(D128 *, SvIV(SvRV(d128)))) = (D128)*(INT2PTR(long double *, SvIV(SvRV(ld))));
-       }
-       else croak("Invalid object supplied to Math::Decimal128::LDtoD128");
-     }
-     else croak("Invalid argument supplied to Math::Decimal128::LDtoD128");
-}
-
-void D128toLD(pTHX_ SV * ld, SV * d128) {
-     if(sv_isobject(d128) && sv_isobject(ld)) {
-       const char *h1 = HvNAME(SvSTASH(SvRV(d128)));
-       const char *h2 = HvNAME(SvSTASH(SvRV(ld)));
-       if(strEQ(h1, "Math::Decimal128") && strEQ(h2, "Math::LongDouble")) {
-         *(INT2PTR(long double *, SvIV(SvRV(ld)))) = (long double)*(INT2PTR(D128 *, SvIV(SvRV(d128))));
-       }
-       else croak("Invalid object supplied to Math::Decimal128::D128toLD");
-     }
-     else croak("Invalid argument supplied to Math::Decimal128::D128toLD");
-}
-
 void DESTROY(pTHX_ SV *  rop) {
      Safefree(INT2PTR(D128 *, SvIV(SvRV(rop))));
 }
@@ -1373,40 +1349,6 @@ D128toNV (d128)
 CODE:
   RETVAL = D128toNV (aTHX_ d128);
 OUTPUT:  RETVAL
-
-void
-LDtoD128 (d128, ld)
-	SV *	d128
-	SV *	ld
-        PREINIT:
-        I32* temp;
-        PPCODE:
-        temp = PL_markstack_ptr++;
-        LDtoD128(aTHX_ d128, ld);
-        if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-          PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
-
-void
-D128toLD (ld, d128)
-	SV *	ld
-	SV *	d128
-        PREINIT:
-        I32* temp;
-        PPCODE:
-        temp = PL_markstack_ptr++;
-        D128toLD(aTHX_ ld, d128);
-        if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
-          PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
-        }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
 
 void
 DESTROY (rop)

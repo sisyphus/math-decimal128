@@ -7,6 +7,7 @@ Changes
 
 t/aab_basic.t
 t/boundaries.t
+t/decode_cross_checks.t
 t/decode_d128.t
 t/conv.t
 t/dec_inc.t

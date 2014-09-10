@@ -230,14 +230,38 @@ SV * Exp10l(pTHX_ int power) {
 
      *d128 = 1.DL;
      if(power < 0) {
+       while(power < -1000) {
+         *d128 *= 1e-1000DL;
+         power += 1000;
+       }
+       while(power < -100) {
+         *d128 *= 1e-100DL;
+         power += 100;
+       }
+       while(power < -10) {
+         *d128 *= 1e-10DL;
+         power += 10;
+       }
        while(power) {
          *d128 *= 1e-1DL;
          power++;
        }
      }
      else {
+       while(power > 1000) {
+         *d128 *= 1e1000DL;
+         power -= 1000;
+       }
+       while(power > 100) {
+         *d128 *= 1e100DL;
+         power -= 100;
+       }
+       while(power > 10) {
+         *d128 *= 1e10DL;
+         power -= 10;
+       }
        while(power) {
-         *d128 *= 10.DL;
+         *d128 *= 1e1DL;
          power--;
        }
      }
@@ -361,15 +385,18 @@ SV * _MEtoD128(pTHX_ char * msd, char * nsd, char * lsd, SV * exponent) {
 void _assignME(pTHX_ SV * a, char * msd, char * nsd, char * lsd, SV * c) {
      long double man;
      int exp = (int)SvIV(c), i;
+     D128 all;
 
      man = strtold(msd, NULL);
-     *(INT2PTR(D128 *, SvIV(SvRV(a)))) = (D128)man * 1e24DL;
+     all = (_Decimal128)man * 1e24DL;
 
      man = strtold(nsd, NULL);
-     *(INT2PTR(D128 *, SvIV(SvRV(a)))) += (D128)man * 1e12DL;
+     all += (D128)man * 1e12DL;
 
      man = strtold(lsd, NULL);
-     *(INT2PTR(D128 *, SvIV(SvRV(a)))) += (D128)man;
+     all += (D128)man;
+
+     *(INT2PTR(D128 *, SvIV(SvRV(a)))) = all;
 
      if(exp < 0) {
        for(i = 0; i > exp; --i) *(INT2PTR(D128 *, SvIV(SvRV(a)))) *= 1e-1DL;

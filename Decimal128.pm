@@ -59,7 +59,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     get_expl get_signl
     )]);
 
-%Math::Decimal128::dpd_correlation = d128_fmt() eq 'DPD' ? (
+%Math::Decimal128::dpd_encode = d128_fmt() eq 'DPD' ? (
      '0000000000' => '000', '0000000001' => '001', '0000000010' => '002', '0000000011' => '003',
      '0000000100' => '004', '0000000101' => '005', '0000000110' => '006', '0000000111' => '007',
      '0000001000' => '008', '0000001001' => '009', '0000010000' => '010', '0000010001' => '011',
@@ -311,6 +311,12 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
      '0110011110' => '992', '0110011111' => '993', '1010011110' => '994', '1010011111' => '995',
      '1110011110' => '996', '1110011111' => '997', '0011111110' => '998', '0011111111' => '999',
 ) : ();
+
+# %Math::Decimal128::dpd_decode is simply %Math::Decimal128::dpd_encode
+# with the keys and values interchanged.
+for my $key(keys(%Math::Decimal128::dpd_encode)) {
+  $Math::Decimal128::dpd_decode{$Math::Decimal128::dpd_encode{$key}} = $key;
+}
 
 %Math::Decimal128::bid_decode = d128_fmt() eq 'BID' ? (
  0 => MEtoD128('1' . ('0' x 33), 0), 1 => MEtoD128('1' . ('0' x 32), 0),
@@ -607,7 +613,7 @@ sub decode_dpd_2nd {
   my $ret = '';
   for my $i(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100) {
     my $key = substr($keep, $i, 10);
-    $ret .= $Math::Decimal128::dpd_correlation{$key};
+    $ret .= $Math::Decimal128::dpd_encode{$key};
   }
   return $ret;
 }
@@ -698,6 +704,69 @@ sub get_signl {
   return '+';
 }
 
+sub DPDtoD128 {
+  # Usable only where DPD format is in use.
+  # Converts the 128-bit string returned by _MEtoBINSTR into
+  # a Math::Decimal128 object set to the value encoded by the
+  # the 128-bit string. This is all done without having to calculate
+  # the actual value - and is typically ~25 times quicker than
+  # MEtoD128.
+  my($man, $exp) = (shift, shift);
+  my $arg = _MEtoBINSTR($man, $exp);
+  return _DPDtoD128(unpack("a*", pack( "B*", $arg)));
+}
+
+sub _MEtoBINSTR {
+  # Converts (mantissa, exponent) strings to DPD encoded 128-bit string - without
+  # the need to actually calculate the value.
+  my($man, $exp) = (shift, shift);
+  if($man =~ /^(\-|\+)?inf/i) {
+     $man =~ /\-inf/ ? return '11111' . ('0' x 123)
+                     : return '01111' . ('0' x 123);
+  }
+  if($man =~ /^(\-|\+)?nan/i) { return '011111' . ('0' x 122) }
+
+  # Determine the sign, and remove it.
+  my $sign = $man =~ /^\-/ ? '1' : '0';
+  $man =~ s/[\+\-]//;
+  die "_MEtoBINSTR has been passed (probably from DPDtoBINSTR) an illegal mantissa"
+    if $man =~ /[^0-9]/;
+
+  # Fill the mantissa with 34 digits - by zero padding the end.
+  my $add_zeroes = 34 - length($man);
+  $man .= '0' x $add_zeroes;
+  $exp -= $add_zeroes;
+
+  # The last 110 bits encode the last 33 digits.
+  my $last_33_dig = substr($man, 1, 33);
+  my $last_110_bits;
+  for(my $i = 0; $i < 31; $i += 3) {
+    $last_110_bits .= $Math::Decimal128::dpd_decode{substr($last_33_dig, $i, 3)}
+  }
+
+  my $len = length($last_110_bits);
+  die "Wrong bitsize ($len != 110) in MEtoBINSTR()" if $len != 110;
+
+  my $leading_digit = substr($man, 0, 1); # ie the msd (most siginificant digit).
+  my $exp_base_2 = sprintf "%014b", $exp + 6176;
+
+  # The encoding of the exponent and msd depends upon the value of the msd.
+  # If it's 0..7, it's done one way; if it's 8 or 9 it's done th'other way.
+  if($leading_digit < 8) {
+    my $leading_digit_bits = sprintf "%03b", $leading_digit;
+    substr($exp_base_2, 2, 0, $leading_digit_bits);
+  }
+  else {
+    my $leading_digit_bit = $leading_digit == 8 ? '0' : '1';
+    $exp_base_2 = '11' . substr($exp_base_2, 0, 2) . $leading_digit_bit . substr($exp_base_2, 2, 12);
+  }
+
+  $len = length($exp_base_2);
+  die "Exponent component length is wrong ($len != 17) in MEtoBINSTR()" if $len != 17;
+
+  return $sign . $exp_base_2 . $last_110_bits;
+}
+
 *decode_d128 = d128_fmt() eq 'DPD' ? \&decode_dpdl : \&decode_bidl;
 
 1;
@@ -781,13 +850,27 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       Checks are conducted to ensure that the arguments are suitable.
       The mantissa string must represent an integer.
 
+     ###################################
+     # Assign from mantissa and exponent more efficiently
+     # NOTE: This works correctly only with DPD format.
+     $d128 = DPDtoD128($mantissa, $exponent);
+
+      eg: $d128 = DPDtoD128('12345', -3); # 12.345
+
+      This is the quickest way of creating the Math::Decimal128 object
+      with the intended value - but works only for DPD format - ie
+      only if d128_fmt() returns 'DPD'.
+      The mantissa string can be 'inf' or 'nan', optionally prefixed
+      with '-' or '+'. Otherwise, the mantissa string must
+      represent an integer value - ie cannot contain a decimal point.
+
      ######################
      # Assign from a string
      $d128 = PVtoD128($string);
 
       eg: $d128 = PVtoD128('-9427199254740993');
-          $d128 = PVtoD128('-9307199254740993e-15');
-          $d128 = Math::Decimal128->new('-9787199254740993');
+          $d128 = PVtoD128('-930719925474.0993e-15');
+          $d128 = Math::Decimal128->new('-978719925474.0993');
           $d128 = Math::Decimal128->new('-9307199254740993e-23');
 
       Transforms the string into args suitable for MEtoD128(),

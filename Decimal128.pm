@@ -10,7 +10,7 @@ require Exporter;
 *import = \&Exporter::import;
 require DynaLoader;
 
-$Math::Decimal128::VERSION = '0.01';
+$Math::Decimal128::VERSION = '0.02';
 
 use subs qw(DEC128_MAX DEC128_MIN);
 
@@ -999,7 +999,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
      $exp = get_expl($d128);
       Returns the exponent of $d128. This is the value that's
-      stored internally within the encapsulated _Decimal28 value;
+      stored internally within the encapsulated _Decimal128 value;
       it may differ from the value that you assigned. For example,
       if you've assigned the value MEtoD128('100', 0) it will
       probably be held internally as '1e2', not '100e0'.

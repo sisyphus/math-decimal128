@@ -1085,7 +1085,7 @@ void _d128_bytes(pTHX_ SV * sv) {
   void * p = &d128;
 
   Newx(buff, 4, char);
-  if(buff == NULL) croak("Failed to allocate meemory in _d128_bytes function");
+  if(buff == NULL) croak("Failed to allocate memory in _d128_bytes function");
 
   sp = mark;
 
@@ -1175,6 +1175,33 @@ SV * _endianness(pTHX) {
 #else
   return &PL_sv_undef;
 #endif
+}
+
+SV * _DPDtoD128(pTHX_ char * in) {
+  D128 * d128;
+  SV * obj_ref, * obj;
+  int i, n = sizeof(D128);
+  D128 out = 0.;
+  void *p = &out;
+
+  Newx(d128, 1, D128);
+  if(d128 == NULL) croak("Failed to allocate memory in DPDtoD128 function");
+
+  obj_ref = newSV(0);
+  obj = newSVrv(obj_ref, "Math::Decimal128");
+
+  for (i = n - 1; i >= 0; i--)
+#ifdef WE_HAVE_BENDIAN
+    ((unsigned char*)p)[i] = in[i];
+#else
+    ((unsigned char*)p)[i] = in[n - 1 - i];
+#endif
+
+  *d128 = out;
+
+  sv_setiv(obj, INT2PTR(IV,d128));
+  SvREADONLY_on(obj);
+  return obj_ref;
 }
 
 
@@ -1666,4 +1693,11 @@ CODE:
   RETVAL = _endianness (aTHX);
 OUTPUT:  RETVAL
 
+
+SV *
+_DPDtoD128 (in)
+	char *	in
+CODE:
+  RETVAL = _DPDtoD128 (aTHX_ in);
+OUTPUT:  RETVAL
 

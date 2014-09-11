@@ -11,7 +11,5 @@ If your compiler provides the strtod128 function and you want to make use of it,
 provide the Makefile.PL with the command line argument STRTOD128=1, or edit the Makefile.PL
 to set $strtod128 to 1.
 
-Consider this module to be alpha software.
-
 Cheers,
 Rob

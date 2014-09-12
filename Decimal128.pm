@@ -668,8 +668,18 @@ sub decode_bidl {
 }
 
 sub PVtoD128 {
+
   my($arg1, $arg2) = split /e/i, $_[0];
+
+  if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
+     $arg1 =~ /\-inf/i
+       ? return _DPDtoD128(unpack("a*", pack( "B*", '11111' . ('0' x 123))))
+       : $arg1 =~ /^(\-|\+)?nan/i ? return _DPDtoD128(unpack("a*", pack( "B*", '011111' . ('0' x 122))))
+                                  : return _DPDtoD128(unpack("a*", pack( "B*", '01111'  . ('0' x 123))));
+  }
+
   $arg2 = 0 unless defined $arg2;
+  $arg1 =~ s/\.0+$//;
   my @split = split /\./, $arg1;
   $split[1] = '' unless defined $split[1];
   $arg2 -= length($split[1]);
@@ -719,12 +729,14 @@ sub DPDtoD128 {
 sub _MEtoBINSTR {
   # Converts (mantissa, exponent) strings to DPD encoded 128-bit string - without
   # the need to actually calculate the value.
-  my($man, $exp) = (shift, shift);
-  if($man =~ /^(\-|\+)?inf/i) {
-     $man =~ /\-inf/ ? return '11111' . ('0' x 123)
-                     : return '01111' . ('0' x 123);
+  my $man = shift;
+  if($man =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
+     $man =~ /\-inf/i ? return '11111' . ('0' x 123)
+                      : $man =~ /^(\-|\+)?nan/i ? return '011111' . ('0' x 122)
+                                                : return '01111'  . ('0' x 123);
   }
-  if($man =~ /^(\-|\+)?nan/i) { return '011111' . ('0' x 122) }
+
+  my $exp = shift;
 
   # Determine the sign, and remove it.
   my $sign = $man =~ /^\-/ ? '1' : '0';
@@ -1048,8 +1060,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
      $d128 = Exp10l($pow);
       Returns a Math::Decimal128 object with a value of
-      10 ** $pow, for $pow in the range (-6176 .. 6144). Croaks
-      with appropriate message if $pow is not within that range.
+      10 ** $pow.
 
      $bool = have_strtod128();
       Returns true if, when building Math::Decimal128,

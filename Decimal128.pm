@@ -682,13 +682,7 @@ sub PVtoD128 {
                                   : return _DPDtoD128($Math::Decimal128::pinf_str);
   }
 
-  $arg2 = 0 unless defined $arg2;
-  $arg1 =~ s/\.0+$//;
-  my @split = split /\./, $arg1;
-  $split[1] = '' unless defined $split[1];
-  $arg2 -= length($split[1]);
-  $arg1 =~ s/\.//;
-  $arg1 =~ s/^0+//;
+  _sanitise_args($arg1, $arg2);
   return MEtoD128($arg1, $arg2);
 }
 
@@ -703,15 +697,19 @@ sub assignPVl {
                                   : assignInfl($_[0], 0);
   }
   else {
-    $arg2 = 0 unless defined $arg2;
-    $arg1 =~ s/\.0+$//;
-    my @split = split /\./, $arg1;
-    $split[1] = '' unless defined $split[1];
-    $arg2 -= length($split[1]);
-    $arg1 =~ s/\.//;
-    $arg1 =~ s/^0+//;
+    _sanitise_args($arg1, $arg2);
     assignMEl($_[0], $arg1, $arg2);
   }
+}
+
+sub _sanitise_args {
+    $_[1] = 0 unless defined $_[1];
+    $_[0] =~ s/\.0+$//;
+    my @split = split /\./, $_[0];
+    $split[1] = '' unless defined $split[1];
+    $_[1] -= length($split[1]);
+    $_[0] =~ s/\.//;
+    $_[0] =~ s/^0+//;
 }
 
 sub get_expl {

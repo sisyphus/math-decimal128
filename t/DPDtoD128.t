@@ -12,7 +12,7 @@ else {$t = 13}
 
 print "1..$t\n";
 
-my $inf = DPDtoD128('inf', 0);
+my $inf = DPDtoD128('inf');
 
 if(is_InfD128($inf) == 1) {print "ok 1\n"}
 else {
@@ -20,7 +20,7 @@ else {
   print "not ok 1\n";
 }
 
-my $pinf = DPDtoD128('+inf', 0);
+my $pinf = DPDtoD128('+inf');
 
 if(is_InfD128($pinf) == 1) {print "ok 2\n"}
 else {
@@ -28,7 +28,7 @@ else {
   print "not ok 2\n";
 }
 
-my $ninf = DPDtoD128('-inf', 0);
+my $ninf = DPDtoD128('-inf');
 
 if(is_InfD128($ninf) == -1) {print "ok 3\n"}
 else {
@@ -48,9 +48,9 @@ else {
   print "not ok 5\n";
 }
 
-my $nan = DPDtoD128('nan', 0);
-my $pnan = DPDtoD128('+nan', 0);
-my $nnan = DPDtoD128('-nan', 0);
+my $nan = DPDtoD128('nan');
+my $pnan = DPDtoD128('+nan');
+my $nnan = DPDtoD128('-nan');
 
 if(is_NaND128($nan)) {print "ok 6\n"}
 else {

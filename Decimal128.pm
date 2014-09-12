@@ -45,7 +45,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
 @Math::Decimal128::EXPORT = ();
 @Math::Decimal128::EXPORT_OK = qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128
+    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     get_expl get_signl
@@ -53,7 +53,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128
+    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     get_expl get_signl
@@ -337,6 +337,10 @@ for my $key(keys(%Math::Decimal128::dpd_encode)) {
  30 => MEtoD128('1' . ('0' x 3), 0), 31 => MEtoD128('1' . ('0' x 2), 0),
  32 => MEtoD128('1' . ('0' x 1), 0), 33 => MEtoD128('1', 0)
 ) : ();
+
+$Math::Decimal128::nan_str  = unpack("a*", pack( "B*", '011111' . ('0' x 122)));
+$Math::Decimal128::ninf_str = unpack("a*", pack( "B*", '11111'  . ('0' x 123)));
+$Math::Decimal128::pinf_str = unpack("a*", pack( "B*", '01111'  . ('0' x 123)));
 
 sub _decode_mant {
   my $val = shift;
@@ -673,9 +677,9 @@ sub PVtoD128 {
 
   if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
      $arg1 =~ /\-inf/i
-       ? return _DPDtoD128(unpack("a*", pack( "B*", '11111' . ('0' x 123))))
-       : $arg1 =~ /^(\-|\+)?nan/i ? return _DPDtoD128(unpack("a*", pack( "B*", '011111' . ('0' x 122))))
-                                  : return _DPDtoD128(unpack("a*", pack( "B*", '01111'  . ('0' x 123))));
+       ? return _DPDtoD128($Math::Decimal128::ninf_str)
+       : $arg1 =~ /^(\-|\+)?nan/i ? return _DPDtoD128($Math::Decimal128::nan_str)
+                                  : return _DPDtoD128($Math::Decimal128::pinf_str);
   }
 
   $arg2 = 0 unless defined $arg2;
@@ -686,6 +690,28 @@ sub PVtoD128 {
   $arg1 =~ s/\.//;
   $arg1 =~ s/^0+//;
   return MEtoD128($arg1, $arg2);
+}
+
+sub assignPVl {
+
+  my($arg1, $arg2) = split /e/i, $_[1];
+
+  if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
+     $arg1 =~ /\-inf/i
+       ? assignInfl($_[0], -1)
+       : $arg1 =~ /^(\-|\+)?nan/i ? assignNaNl($_[0])
+                                  : assignInfl($_[0], 0);
+  }
+  else {
+    $arg2 = 0 unless defined $arg2;
+    $arg1 =~ s/\.0+$//;
+    my @split = split /\./, $arg1;
+    $split[1] = '' unless defined $split[1];
+    $arg2 -= length($split[1]);
+    $arg1 =~ s/\.//;
+    $arg1 =~ s/^0+//;
+    assignMEl($_[0], $arg1, $arg2);
+  }
 }
 
 sub get_expl {
@@ -956,16 +982,16 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
       eg: assignMEl($d128, '123459', -6); # 0.123459
 
-     assignPV($d128, $string);
+     assignPVl($d128, $string);
       Assigns the value represented by $string to the
       Math::Decimal128 object, $d128.
 
-      eg: assignPV($d128, '123459e-6'); # 0.123459
+      eg: assignPVl($d128, '123459e-6'); # 0.123459
 
-     assignNaN($d128);
+     assignNaNl($d128);
       Assigns a NaN to the Math::Decimal128 object, $d128.
 
-     assignInf($d128, $sign);
+     assignInfl($d128, $sign);
       Assigns an Inf to the Math::Decimal128 object, $d128.
       If $sign is negative, assigns -Inf; otherwise +Inf.
 

@@ -219,8 +219,11 @@ SV * Exp10l(pTHX_ int power) {
      D128 * d128;
      SV * obj_ref, * obj;
 
+     /* Remove the following condition, and allow 0/(+-inf to be returned
+        when the power goes outside the range.
      if(power < -6176 || power > 6144)
        croak("Argument supplied to Exp10 function (%d) is out of allowable range", power);
+     */
 
      Newx(d128, 1, D128);
      if(d128 == NULL) croak("Failed to allocate memory in Exp10() function");

@@ -45,18 +45,18 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
 @Math::Decimal128::EXPORT = ();
 @Math::Decimal128::EXPORT_OK = qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl
+    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl assignDPDl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
-    get_expl get_signl
+    get_expl get_signl PVltoMEl
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl
+    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl assignDPDl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
-    get_expl get_signl
+    get_expl get_signl PVltoMEl
     )]);
 
 %Math::Decimal128::dpd_encode = d128_fmt() eq 'DPD' ? (
@@ -673,33 +673,40 @@ sub decode_bidl {
 
 sub PVtoD128 {
 
-  my($arg1, $arg2) = split /e/i, $_[0];
+  my($arg1, $arg2) = PVltoMEl($_[0]);
 
-  if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
-     $arg1 =~ /\-inf/i
-       ? return _DPDtoD128($Math::Decimal128::ninf_str)
-       : $arg1 =~ /^(\-|\+)?nan/i ? return _DPDtoD128($Math::Decimal128::nan_str)
-                                  : return _DPDtoD128($Math::Decimal128::pinf_str);
+  if($arg1 =~ /inf|nan/i) {
+    $arg1 =~ /nan/i ? return NaND128()
+                    : $arg1 =~ /^\-/ ? return InfD128(-1)
+                                     : return InfD128(1);
   }
 
-  _sanitise_args($arg1, $arg2);
   return MEtoD128($arg1, $arg2);
 }
 
 sub assignPVl {
 
-  my($arg1, $arg2) = split /e/i, $_[1];
-
-  if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
-     $arg1 =~ /\-inf/i
-       ? assignInfl($_[0], -1)
-       : $arg1 =~ /^(\-|\+)?nan/i ? assignNaNl($_[0])
-                                  : assignInfl($_[0], 0);
+  my($arg1, $arg2) = PVltoMEl($_[1]);
+  if($arg1 =~ /inf|nan/i) {
+    $arg1 =~ /nan/i ? assignNaNl($_[0])
+                    : $arg1 =~ /^\-/ ? assignInfl($_[0], -1)
+                                     : assignInfl($_[0], 1);
   }
   else {
-    _sanitise_args($arg1, $arg2);
     assignMEl($_[0], $arg1, $arg2);
   }
+}
+
+sub PVltoMEl {
+
+  my($arg1, $arg2) = split /e/i, $_[0];
+
+  if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
+    return ($arg1, 0);
+  }
+
+  _sanitise_args($arg1, $arg2);
+  return ($arg1, $arg2);
 }
 
 sub _sanitise_args {
@@ -748,6 +755,10 @@ sub DPDtoD128 {
   my($man, $exp) = (shift, shift);
   my $arg = _MEtoBINSTR($man, $exp);
   return _DPDtoD128(unpack("a*", pack( "B*", $arg)));
+}
+
+sub assignDPDl {
+  _assignDPD($_[0], unpack("a*", pack("B*", _MEtoBINSTR($_[1], $_[2]))));
 }
 
 sub _MEtoBINSTR {
@@ -980,6 +991,16 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
       eg: assignMEl($d128, '123459', -6); # 0.123459
 
+     assignDPDl($d128, $mantissa, $exponent);
+      Assigns the value represented by ($mantissa, $exponent)
+      to the Math::Decimal128 object, $d128. This works more
+      efficiently than assignMEl(), but works only when the
+      _Decimal128 type is DPD-formatted. (The d128_fmt function
+      will tell you whether the _Decimal128 is DPD-formatted or
+      BID-formatted.)
+
+      eg: assignDPDl($d128, '123459', -6); # 0.123459
+
      assignPVl($d128, $string);
       Assigns the value represented by $string to the
       Math::Decimal128 object, $d128.
@@ -1058,6 +1079,19 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       equates to the decimal -123.45. Uses D128toME().
 
 =head1 OTHER FUNCTIONS
+
+     ($man, $exp) = PVltoMEl($string);
+      $string is a string representing a floating-point value - eg
+      'inf', '+nan', '123.456', '-1234.56e-1', or '12345.6E-2'.
+      The function returns an array of (mantissa, exponent), where
+      the mantissa is a string of base 10 digits (prefixed with a
+      '-' for -ve values) with an implied decimal point at the
+      end of the string. For strings such as 'inf' and 'nan', the
+      mantissa will be set to $string, and the exponent to 0.
+      For the example strings given above, the returned arrays
+      would be ('inf', 0), ('+nan', 0), ('123456', -3), ('-123456',
+      -3) and ('123456', -3) respectively.
+
 
      $fmt = d128_fmt();
       Returns either 'DPD' or 'BID', depending upon whether the

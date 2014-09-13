@@ -6,6 +6,7 @@ README
 Changes
 
 t/aab_basic.t
+t/assignDPDl.t
 t/assignPVl.t
 t/boundaries.t
 t/decode_cross_checks.t

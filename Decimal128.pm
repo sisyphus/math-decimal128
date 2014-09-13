@@ -48,7 +48,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl assignDPDl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
-    get_expl get_signl PVltoMEl
+    get_expl get_signl PVtoMEl MEtoPVl
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
@@ -56,7 +56,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128 assignPVl assignDPDl
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
-    get_expl get_signl PVltoMEl
+    get_expl get_signl PVtoMEl MEtoPVl
     )]);
 
 %Math::Decimal128::dpd_encode = d128_fmt() eq 'DPD' ? (
@@ -673,7 +673,7 @@ sub decode_bidl {
 
 sub PVtoD128 {
 
-  my($arg1, $arg2) = PVltoMEl($_[0]);
+  my($arg1, $arg2) = PVtoMEl($_[0]);
 
   if($arg1 =~ /inf|nan/i) {
     $arg1 =~ /nan/i ? return NaND128()
@@ -686,7 +686,7 @@ sub PVtoD128 {
 
 sub assignPVl {
 
-  my($arg1, $arg2) = PVltoMEl($_[1]);
+  my($arg1, $arg2) = PVtoMEl($_[1]);
   if($arg1 =~ /inf|nan/i) {
     $arg1 =~ /nan/i ? assignNaNl($_[0])
                     : $arg1 =~ /^\-/ ? assignInfl($_[0], -1)
@@ -697,7 +697,7 @@ sub assignPVl {
   }
 }
 
-sub PVltoMEl {
+sub PVtoMEl {
 
   my($arg1, $arg2) = split /e/i, $_[0];
 
@@ -707,6 +707,17 @@ sub PVltoMEl {
 
   _sanitise_args($arg1, $arg2);
   return ($arg1, $arg2);
+}
+
+sub MEtoPVl {
+  my $arg1 = shift;
+  if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
+    $arg1 =~ s/\+//;
+    return $arg1;
+  }
+
+  my $arg2 = shift;
+  return $arg1 . 'e' . $arg2;
 }
 
 sub _sanitise_args {
@@ -1080,7 +1091,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
 =head1 OTHER FUNCTIONS
 
-     ($man, $exp) = PVltoMEl($string);
+     ($man, $exp) = PVtoMEl($string);
       $string is a string representing a floating-point value - eg
       'inf', '+nan', '123.456', '-1234.56e-1', or '12345.6E-2'.
       The function returns an array of (mantissa, exponent), where

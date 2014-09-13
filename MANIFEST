@@ -19,6 +19,7 @@ t/Inf_Nan.t
 t/general.t
 t/IV_arith.t
 t/lengthy_mantissa.t
+t/MEtoPVl.t
 t/new.t
 t/overload_cmp.t
 t/overload_int.t

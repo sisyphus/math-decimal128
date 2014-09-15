@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Math::Decimal128 qw(:all);
 
-print "1..10\n";
+print "1..11\n";
 
 my $str = '5' x16; # 5555555555555555
 my $str_copy = $str;

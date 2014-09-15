@@ -67,7 +67,7 @@ else {
 
 my $ok = 1;
 
-for my $exp(0..10, 20, 30, 280 .. 300, 6150 .. 6176, 6200) {
+for my $exp(0..10, 20, 280, 6100 .. 6212) {
   for my $digits(1..34) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
@@ -84,7 +84,7 @@ $ok ? print "ok 10\n" : print "not ok 10\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 280 .. 300, 6100 .. 6111, 6200) {
+for my $exp(0..10, 20, 280, 6100 .. 6212) {
   for my $digits(1..34) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, $exp);
@@ -101,7 +101,7 @@ $ok ? print "ok 11\n" : print "not ok 11\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 280 .. 300, 6111, 6200) {
+for my $exp(0..10, 20, 280, 6100 .. 6212) {
   for my $digits(1..26) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, $exp);
@@ -118,7 +118,7 @@ $ok ? print "ok 12\n" : print "not ok 12\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 280 .. 300, 6176, 6200) {
+for my $exp(0..10, 20, 280, 6100 .. 6212) {
   for my $digits(1..26) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
@@ -135,7 +135,7 @@ $ok ? print "ok 13\n" : print "not ok 13\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 6150 .. 6176, 6200) {
+for my $exp(0..10, 20, 280, 6100 .. 6212) {
   for my $digits(1..34) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
@@ -153,7 +153,7 @@ $ok ? print "ok 14\n" : print "not ok 14\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 6100 .. 6111, 6200) {
+for my $exp(0..10, 20, 30, 6100 .. 6212) {
   for my $digits(1..34) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, $exp);
@@ -171,7 +171,7 @@ $ok ? print "ok 15\n" : print "not ok 15\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 6100 .. 6111, 6200) {
+for my $exp(0..10, 20, 30, 6100 .. 6212) {
   for my $digits(1..26) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, $exp);
@@ -189,7 +189,7 @@ $ok ? print "ok 16\n" : print "not ok 16\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 6150 .. 6176, 6200) {
+for my $exp(0..10, 20, 30, 6100 .. 6212) {
   for my $digits(1..26) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, -$exp);

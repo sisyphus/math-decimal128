@@ -3,7 +3,7 @@ use strict;
 use Math::Decimal128 qw(:all);
 use Devel::Peek;
 
-print "1..3\n";
+print "1..4\n";
 
 
 if($Math::Decimal128::VERSION eq '0.02' && Math::Decimal128::_get_xs_version() eq $Math::Decimal128::VERSION) {print "ok 1\n"}
@@ -30,3 +30,8 @@ else {
   print "not ok 3\n";
 }
 
+if($fmt eq $Math::Decimal128::fmt) {print "ok 4\n"}
+else {
+  warn "$fmt ne $Math::Decimal64::fmt\n";
+  print "not ok 4\n";
+}

@@ -312,11 +312,18 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
      '1110011110' => '996', '1110011111' => '997', '0011111110' => '998', '0011111111' => '999',
 ) : ();
 
+#######################################################################
+#######################################################################
+
 # %Math::Decimal128::dpd_decode is simply %Math::Decimal128::dpd_encode
 # with the keys and values interchanged.
+
 for my $key(keys(%Math::Decimal128::dpd_encode)) {
   $Math::Decimal128::dpd_decode{$Math::Decimal128::dpd_encode{$key}} = $key;
 }
+
+#######################################################################
+#######################################################################
 
 %Math::Decimal128::bid_decode = d128_fmt() eq 'BID' ? (
  0 => MEtoD128('1' . ('0' x 33), 0), 1 => MEtoD128('1' . ('0' x 32), 0),
@@ -338,9 +345,16 @@ for my $key(keys(%Math::Decimal128::dpd_encode)) {
  32 => MEtoD128('1' . ('0' x 1), 0), 33 => MEtoD128('1', 0)
 ) : ();
 
+#######################################################################
+#######################################################################
+
 $Math::Decimal128::nan_str  = unpack("a*", pack( "B*", '011111' . ('0' x 122)));
 $Math::Decimal128::ninf_str = unpack("a*", pack( "B*", '11111'  . ('0' x 123)));
 $Math::Decimal128::pinf_str = unpack("a*", pack( "B*", '01111'  . ('0' x 123)));
+$Math::Decimal128::fmt = d128_fmt();
+
+#######################################################################
+#######################################################################
 
 sub _decode_mant {
   my $val = shift;
@@ -358,14 +372,22 @@ sub _decode_mant {
   return $ret;
 }
 
+#######################################################################
+#######################################################################
 
 sub dl_load_flags {0} # Prevent DynaLoader from complaining and croaking
+
+#######################################################################
+#######################################################################
 
 sub _overload_string {
     my @ret = D128toME($_[0]);
     if(is_InfD128($_[0]) || !$_[0]) {return $ret[0]}
     return $ret[0] . 'e' . $ret[1];
 }
+
+#######################################################################
+#######################################################################
 
 sub _overload_int {
     if(is_NaND128($_[0]) || is_InfD128($_[0]) || is_ZeroD128($_[0])) {return $_[0]}
@@ -382,6 +404,9 @@ sub _overload_int {
     substr($man, $exp, -$exp, '');
     return MEtoD128($man, 0);
 }
+
+#######################################################################
+#######################################################################
 
 sub new {
 
@@ -441,12 +466,18 @@ sub new {
     die "Bad argument given to new";
 }
 
+#######################################################################
+#######################################################################
+
 sub D128toME {
     my($ret1, $ret2) = split /e/i, decode_d128($_[0]);
     $ret2 = 0 unless defined $ret2;
     $ret2 = 0 if is_ZeroD128($_[0]);
     return ($ret1, $ret2);
 }
+
+#######################################################################
+#######################################################################
 
 sub MEtoD128 {
   # Check that 2 args are supplied
@@ -466,9 +497,10 @@ sub MEtoD128 {
   }
 
 
-  if($len_1 > 34) {
-    die "$arg1 exceeds _Decimal128 precision.",
-        " It needs to be shortened to no more than 34 decimal digits";
+  if($len_1 > 34 || $arg2 < -6176) {
+    die "$arg1 exceeds _Decimal128 precision. It needs to be shortened to no more than 34 decimal digits"
+      if $len_1 > 34;
+    ($arg1, $arg2) = _round_as_needed($arg1, $arg2);
   }
 
   # split $arg1 into segments that don't exceed 16 digits.
@@ -485,6 +517,45 @@ sub MEtoD128 {
   return _MEtoD128($sign . $msd, $sign . $nsd, $sign . $lsd, $arg2);
 
 }
+
+#######################################################################
+#######################################################################
+
+# Values such as (d, -6178), (dd, -6179), (ddd, -6180), etc evaluate to zero.
+# But values such as (dddd, -6178), (ddd, -6179), (dddddddd, -6180), etc may be non-zero.
+# In such cases we'll remove the ignored (trailing) digits, rounding the leading
+# digits to nearest - tied to even for midway cases.
+
+sub _round_as_needed {
+   my($sign, $man, $exp) = ('', shift, shift);
+
+   if($man =~ /^\-/) {
+     $man =~ s/^\-//;
+     $sign = '-';
+   }
+
+   my $length = length $man;
+   my $maxlen = -6176 - $exp;
+
+   if($length >= $maxlen) {
+     my $rounder = substr($man, $length - $maxlen); # The trailing (ignored) digits
+     $man = $length > $maxlen ? substr($man, 0, $length - $maxlen)
+                               : '0';
+     my $roundup = 0;
+     $roundup = 1 if substr($rounder, 0, 1) > 5;
+     $roundup = 1 if ((substr($rounder, 0, 1) == 5) &&
+                      ((substr($rounder, 1) =~ /[1-9]/) || (substr($man, -1, 1) %2 == 1)));
+
+     $man++ if $roundup;
+     $exp += $maxlen; # Removal of trailing digits moved the implied
+                      # decimal point $maxlen places to the left
+   }
+
+   return ($sign . $man, $exp);
+}
+
+#######################################################################
+#######################################################################
 
 sub assignMEl {
   # Check that 3 args are supplied
@@ -505,9 +576,10 @@ sub assignMEl {
     $arg2 =~ s/^\-//;
   }
 
-  if($len_2 > 34) {
-    die "$arg2 exceeds _Decimal128 precision.",
-        " It needs to be shortened to no more than 34 decimal digits";
+  if($len_2 > 34 || $arg3 < -6176) {
+    die "$arg2 exceeds _Decimal128 precision. It needs to be shortened to no more than 34 decimal digits"
+      if $len_2 > 34;
+    ($arg2, $arg3) = _round_as_needed($arg2, $arg3);
   }
 
   my($msd, $nsd, $lsd);
@@ -523,6 +595,9 @@ sub assignMEl {
 
 }
 
+#######################################################################
+#######################################################################
+
 sub _sci2me {
     my @ret = split /e/i, $_[0];
     chop $ret[0] while $ret[0] =~ /0\b/;
@@ -535,13 +610,22 @@ sub _sci2me {
     return @ret;
 }
 
+#######################################################################
+#######################################################################
+
 sub DEC128_MAX {return _DEC128_MAX()}
 sub DEC128_MIN {return _DEC128_MIN()}
+
+#######################################################################
+#######################################################################
 
 sub d128_bytes {
   my @ret = _d128_bytes($_[0]);
   return join '', @ret;
 }
+
+#######################################################################
+#######################################################################
 
 sub hex2binl {
     my $ret = unpack("B*", (pack "H*", $_[0]));
@@ -550,12 +634,20 @@ sub hex2binl {
     return $ret;
 }
 
+#######################################################################
+#######################################################################
+
 sub d128_fmt {
-  my $d128 = MEtoD128('99', 0);
-  return 'DPD' if d128_bytes($d128) =~ /000$/;
-  return 'BID' if d128_bytes($d128) =~ /063$/;
+  my $d128 = MEtoD128('1234567890123456789012345678901234', 0);
+  # DPD: 2608134B9C1E28E56F3C127177823534
+  # BID: 30403CDE6FFF9732DE825CD07E96AFF2
+  return 'DPD' if d128_bytes($d128) =~ /534$/i;
+  return 'BID' if d128_bytes($d128) =~ /FF2$/i;
   return 'Unknown';
 }
+
+#######################################################################
+#######################################################################
 
 sub decode_dpdl {
   # Takes the Math::Decimal128 object as its arg.
@@ -579,6 +671,9 @@ sub decode_dpdl {
   my $ret = $first[0] . $mantissa . 'e' . $first[2];
 
 }
+
+#######################################################################
+#######################################################################
 
 sub decode_dpd_1st{
   # Takes the entire binary string as its arg.
@@ -607,6 +702,9 @@ sub decode_dpd_1st{
   die "decode_dpd_1st function failed to parse its argument ($_[0])";
 }
 
+#######################################################################
+#######################################################################
+
 sub decode_dpd_2nd {
   # Takes the entire binary string as its arg.
   die "Argument to decode_dpd_2nd is wrong size (", length($_[0]), ")"
@@ -621,6 +719,9 @@ sub decode_dpd_2nd {
   }
   return $ret;
 }
+
+#######################################################################
+#######################################################################
 
 sub decode_bidl {
   # Takes a Math::Decimal128 object as its arg.
@@ -671,6 +772,9 @@ sub decode_bidl {
   die "decode_bid function failed to parse its argument ($_[0])";
 }
 
+#######################################################################
+#######################################################################
+
 sub PVtoD128 {
 
   my($arg1, $arg2) = PVtoMEl($_[0]);
@@ -683,6 +787,9 @@ sub PVtoD128 {
 
   return MEtoD128($arg1, $arg2);
 }
+
+#######################################################################
+#######################################################################
 
 sub assignPVl {
 
@@ -697,6 +804,9 @@ sub assignPVl {
   }
 }
 
+#######################################################################
+#######################################################################
+
 sub PVtoMEl {
 
   my($arg1, $arg2) = split /e/i, $_[0];
@@ -709,6 +819,9 @@ sub PVtoMEl {
   return ($arg1, $arg2);
 }
 
+#######################################################################
+#######################################################################
+
 sub MEtoPVl {
   my $arg1 = shift;
   if($arg1 =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
@@ -720,6 +833,9 @@ sub MEtoPVl {
   return $arg1 . 'e' . $arg2;
 }
 
+#######################################################################
+#######################################################################
+
 sub _sanitise_args {
     $_[1] = 0 unless defined $_[1];
     $_[0] =~ s/\.0+$//;
@@ -729,6 +845,9 @@ sub _sanitise_args {
     $_[0] =~ s/\.//;
     $_[0] =~ s/^0+//;
 }
+
+#######################################################################
+#######################################################################
 
 sub get_expl {
   my $keep = hex2binl(d128_bytes($_[0]));
@@ -751,10 +870,16 @@ sub get_expl {
   }
 }
 
+#######################################################################
+#######################################################################
+
 sub get_signl {
   return '-' if hex(substr(d128_bytes($_[0]), 0, 1)) >= 8;
   return '+';
 }
+
+#######################################################################
+#######################################################################
 
 sub DPDtoD128 {
   # Usable only where DPD format is in use.
@@ -768,14 +893,21 @@ sub DPDtoD128 {
   return _DPDtoD128(unpack("a*", pack( "B*", $arg)));
 }
 
+#######################################################################
+#######################################################################
+
 sub assignDPDl {
   _assignDPD($_[0], unpack("a*", pack("B*", _MEtoBINSTR($_[1], $_[2]))));
 }
+
+#######################################################################
+#######################################################################
 
 sub _MEtoBINSTR {
   # Converts (mantissa, exponent) strings to DPD encoded 128-bit string - without
   # the need to actually calculate the value.
   my $man = shift;
+
   if($man =~ /^(\-|\+)?inf|^(\-|\+)?nan/i) {
      $man =~ /\-inf/i ? return '11111' . ('0' x 123)
                       : $man =~ /^(\-|\+)?nan/i ? return '011111' . ('0' x 122)
@@ -790,10 +922,31 @@ sub _MEtoBINSTR {
   die "_MEtoBINSTR has been passed (probably from DPDtoBINSTR) an illegal mantissa"
     if $man =~ /[^0-9]/;
 
+  # Remove leading zeroes, and return zero (of appropriate sign)
+  # if we're left with the empty string.
+  $man =~ s/^0+//;
+  return $sign . '01000011111111111' . ('0' x 110) unless $man;
+
   # Fill the mantissa with 34 digits - by zero padding the end.
   my $add_zeroes = 34 - length($man);
   $man .= '0' x $add_zeroes;
   $exp -= $add_zeroes;
+
+  if(length($man) > 34 || $exp < -6176) {
+    die "$man exceeds _Decimal128 precision. It needs to be shortened to no more than 34 decimal digits"
+      if length($man) > 34;
+    ($man, $exp) = _round_as_needed($man, $exp);
+  }
+
+  # Return 0 if $exp is still less that -6176.
+   return $sign . '01000011111111111' . ('0' x 110) if $exp < -6176;
+
+  # Return -inf/inf if value is infinite
+  if($exp > 6111) {
+    return $sign . '1111' . ('0' x 123) if (length($man) + $exp) > 6145;
+  }
+
+  $man = '0' . $man while length($man) < 34;
 
   # The last 110 bits encode the last 33 digits.
   my $last_33_dig = substr($man, 1, 33);
@@ -825,7 +978,13 @@ sub _MEtoBINSTR {
   return $sign . $exp_base_2 . $last_110_bits;
 }
 
+#######################################################################
+#######################################################################
+
 *decode_d128 = d128_fmt() eq 'DPD' ? \&decode_dpdl : \&decode_bidl;
+
+#######################################################################
+#######################################################################
 
 1;
 
@@ -905,12 +1064,12 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       It's a little kludgy, but this is the safest and surest way
       of creating the Math::Decimal128 object with the intended
       value.
+      The mantissa string must represent an integer. (There's an
+      implicit '.0' at the end of the string.)
       Checks are conducted to ensure that the arguments are suitable.
       The mantissa string must represent an integer.
 
      ###################################
-     # Assign from mantissa and exponent more efficiently
-     # NOTE: This works correctly only with DPD format.
      $d128 = DPDtoD128($mantissa, $exponent);
 
       eg: $d128 = DPDtoD128('12345', -3); # 12.345
@@ -996,12 +1155,14 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
 =head1 ASSIGN A NEW VALUE TO AN EXISTING OBJECT
 
+     #######################################
      assignMEl($d128, $mantissa, $exponent);
       Assigns the value represented by ($mantissa, $exponent)
       to the Math::Decimal128 object, $d128.
 
       eg: assignMEl($d128, '123459', -6); # 0.123459
 
+     ########################################
      assignDPDl($d128, $mantissa, $exponent);
       Assigns the value represented by ($mantissa, $exponent)
       to the Math::Decimal128 object, $d128. This works more
@@ -1012,40 +1173,51 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
       eg: assignDPDl($d128, '123459', -6); # 0.123459
 
+     ##########################
      assignPVl($d128, $string);
       Assigns the value represented by $string to the
       Math::Decimal128 object, $d128.
 
       eg: assignPVl($d128, '123459e-6'); # 0.123459
 
+     ##################
      assignNaNl($d128);
       Assigns a NaN to the Math::Decimal128 object, $d128.
 
+     #########################
      assignInfl($d128, $sign);
       Assigns an Inf to the Math::Decimal128 object, $d128.
       If $sign is negative, assigns -Inf; otherwise +Inf.
 
+     #########################
+
 =head1 INF, NAN and ZERO OBJECTS
 
+     #######################
      $d128 = InfD128($sign);
       If $sign < 0, creates a new Math::Decimal128 object set to
       negative infinity; else creates a Math::Decimal128 object set
       to positive infinity.
 
+     ##################
      $d128 = NaND128();
       Creates a new Math::Decimal128 object set to NaN.
       Same as "$d128 = Math::Decimal128->new();"
 
+     ########################
      $d128 = ZeroD128($sign);
       If $sign < 0, creates a new Math::Decimal128 object set to
       negative zero; else creates a Math::Decimal128 object set to
       zero.
+
+     ########################
 
 =head1 RETRIEVAL FUNCTIONS
 
     The following functions provide ways of seeing the value of
     Math::Decimal128 objects.
 
+     #############################
      $string = decode_d128($d128);
       This function calls either decode_dpd() or decode_bid(),
       depending upon the formatting used to encode the
@@ -1059,6 +1231,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       +infinity, -infinity, NaN.
       The value will be decoded correctly.
 
+     ###################################
      $string = decode_dpd($d128_binary);
      $string = decode_bid($d128_binary);
 
@@ -1072,12 +1245,14 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       call the appropriate decode_*() function for that encoding.
       The d128_fmt() sub will tell you which encoding is in use.
 
+     #########################################
      ($mantissa, $exponent) = D128toME($d128);
       Returns the value of the Math::Decimal object as a
       mantissa (string of up to 34 decimal digits) and exponent.
       You can then manipulate those values to output the
       value in your preferred format.
 
+     ######################
      $nv = D128toNV($d128);
       This function returns the value of the Math::Decimal128
       object to a perl scalar (NV). It will not translate the value
@@ -1085,12 +1260,14 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       precisely as a _Decimal128 value is greater than the precision
       provided by the NV.
 
+     ############
      print $d128;
       Will print the value in the format (eg) -12345e-2, which
       equates to the decimal -123.45. Uses D128toME().
 
 =head1 OTHER FUNCTIONS
 
+     ################################
      ($man, $exp) = PVtoMEl($string);
       $string is a string representing a floating-point value - eg
       'inf', '+nan', '123.456', '-1234.56e-1', or '12345.6E-2'.
@@ -1103,22 +1280,30 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       would be ('inf', 0), ('+nan', 0), ('123456', -3), ('-123456',
       -3) and ('123456', -3) respectively.
 
+     ########################################
+     $string = MEtoPVl($mantissa, $exponent);
+      If $mantissa =~ /inf|nan/i returns $mantissa.
+      Else returns $mantissa . 'e' . $exponent.
 
+     ##################
      $fmt = d128_fmt();
       Returns either 'DPD' or 'BID', depending upon whether the
       (internal) _Decimal128 values are encoded using the 'Densely
       Packed Decimal' format or the 'Binary Integer Decimal'
       format.
 
+     #########################
      $hex = d128_bytes($d128);
       Returns the hex representation of the _Decimal128 value
       as a string of 32 hex characters.
 
+     #############################
      $binary = hex2bin($d128_hex);
       Takes the string returned by d128_bytes (above) and
       rewrites it in binary form - ie as a string of 128 base 2
       digits.
 
+     ###################
      $d128 = DEC128_MAX; # 9999999999999999999999999999999999e6111
      $d128 = DEC128_MIN; # 1e-6176
       DEC128_MAX is the largest positive finite representable
@@ -1127,10 +1312,12 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       _Decimal128 value.
       Multiply these by -1 to get their negative counterparts.
 
+     #####################
      $d128 = Exp10l($pow);
       Returns a Math::Decimal128 object with a value of
       10 ** $pow.
 
+     #########################
      $bool = have_strtod128();
       Returns true if, when building Math::Decimal128,
       the Makefile.PL was configured to make the STRtoD128()
@@ -1139,33 +1326,39 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       (No use making this function available if your compiler's
       C library doesn't provide the strtod128 function.)
 
-
+     ###########################
      $test = is_ZeroD128($d128);
       Returns:
        -1 if $d128 is negative zero;
         1 if $d128 is a positive zero;
         0 if $d128 is not zero.
 
+     ##########################
      $test = is_InfD128($d128);
       Returns:
        -1 if $d128 is negative infinity;
         1 if $d128 is positive infinity;
         0 if $d128 is not infinity.
 
+     ##########################
      $bool = is_NaND128($d128);
       Returns:
         1 if $d128 is a NaN;
         0 if $d128 is not a NaN.
 
+     #########################
      $sign = get_signl($d128);
       Returns the sign ('+' or '-') of $d128.
 
+     #######################
      $exp = get_expl($d128);
       Returns the exponent of $d128. This is the value that's
       stored internally within the encapsulated _Decimal128 value;
       it may differ from the value that you assigned. For example,
       if you've assigned the value MEtoD128('100', 0) it will
       probably be held internally as '1e2', not '100e0'.
+
+     #######################
 
 =head1 LICENSE
 

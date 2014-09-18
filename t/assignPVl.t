@@ -65,9 +65,11 @@ else {
   print "not ok 9\n";
 }
 
+warn "\nThe remaining assignPVl.t tests might take a couple of minutes\n";
+
 my $ok = 1;
 
-for my $exp(0..10, 20, 280, 6100 .. 6212) {
+for my $exp(0..10, 6140 .. 6220) {
   for my $digits(1..34) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
@@ -84,7 +86,7 @@ $ok ? print "ok 10\n" : print "not ok 10\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 280, 6100 .. 6212) {
+for my $exp(0..10, 6140 .. 6220) {
   for my $digits(1..34) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, $exp);
@@ -101,8 +103,8 @@ $ok ? print "ok 11\n" : print "not ok 11\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 280, 6100 .. 6212) {
-  for my $digits(1..26) {
+for my $exp(0..10, 6140 .. 6220) {
+  for my $digits(1..34) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, $exp);
     assignPVl($rop, $man . 'E' . $exp);
@@ -118,8 +120,8 @@ $ok ? print "ok 12\n" : print "not ok 12\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 280, 6100 .. 6212) {
-  for my $digits(1..26) {
+for my $exp(0..10, 6140 .. 6220) {
+  for my $digits(1..34) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
     assignPVl($rop, $man . 'e' . -$exp);
@@ -135,7 +137,7 @@ $ok ? print "ok 13\n" : print "not ok 13\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 280, 6100 .. 6212) {
+for my $exp(0..10, 6140 .. 6220) {
   for my $digits(1..34) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
@@ -153,7 +155,7 @@ $ok ? print "ok 14\n" : print "not ok 14\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 6100 .. 6212) {
+for my $exp(0..10, 6140 .. 6220) {
   for my $digits(1..34) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, $exp);
@@ -171,8 +173,8 @@ $ok ? print "ok 15\n" : print "not ok 15\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 6100 .. 6212) {
-  for my $digits(1..26) {
+for my $exp(0..10, 6140 .. 6220) {
+  for my $digits(1..34) {
     my $man = '-' . random_select($digits);
     my $d128 = MEtoD128($man, $exp);
     my $mod = me2pv($man, $exp);
@@ -189,8 +191,8 @@ $ok ? print "ok 16\n" : print "not ok 16\n";
 
 $ok = 1;
 
-for my $exp(0..10, 20, 30, 6100 .. 6212) {
-  for my $digits(1..26) {
+for my $exp(0..10, 6140 .. 6220) {
+  for my $digits(1..34) {
     my $man = random_select($digits);
     my $d128 = MEtoD128($man, -$exp);
     my $mod = me2pv($man, -$exp);

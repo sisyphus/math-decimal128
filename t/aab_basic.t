@@ -32,6 +32,11 @@ else {
 
 if($fmt eq $Math::Decimal128::fmt) {print "ok 4\n"}
 else {
-  warn "$fmt ne $Math::Decimal64::fmt\n";
+  warn "\n d128_bytes(MEtoD128('1234567890123456789012345678901234', 0))\n",
+       " is expected to be either:\n",
+       " 30403CDE6FFF9732DE825CD07E96AFF2 (for BID format) or\n",
+       " 2608134B9C1E28E56F3C127177823534 (for DPD format).\n",
+       " Instead we got: ", d128_bytes(MEtoD128('1234567890123456789012345678901234', 0)), "\n";
   print "not ok 4\n";
 }
+

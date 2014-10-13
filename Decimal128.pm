@@ -59,7 +59,18 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     get_expl get_signl PVtoMEl MEtoPVl
     )]);
 
-%Math::Decimal128::dpd_encode = d128_fmt() eq 'DPD' ? (
+#######################################################################
+#######################################################################
+
+$Math::Decimal128::nan_str  = unpack("a*", pack( "B*", '011111' . ('0' x 122)));
+$Math::Decimal128::ninf_str = unpack("a*", pack( "B*", '11111'  . ('0' x 123)));
+$Math::Decimal128::pinf_str = unpack("a*", pack( "B*", '01111'  . ('0' x 123)));
+$Math::Decimal128::fmt = d128_fmt();
+
+#######################################################################
+#######################################################################
+
+%Math::Decimal128::dpd_encode = $Math::Decimal128::fmt eq 'DPD' ? (
      '0000000000' => '000', '0000000001' => '001', '0000000010' => '002', '0000000011' => '003',
      '0000000100' => '004', '0000000101' => '005', '0000000110' => '006', '0000000111' => '007',
      '0000001000' => '008', '0000001001' => '009', '0000010000' => '010', '0000010001' => '011',
@@ -325,7 +336,7 @@ for my $key(keys(%Math::Decimal128::dpd_encode)) {
 #######################################################################
 #######################################################################
 
-%Math::Decimal128::bid_decode = d128_fmt() eq 'BID' ? (
+%Math::Decimal128::bid_decode = $Math::Decimal128::fmt eq 'BID' ? (
  0 => MEtoD128('1' . ('0' x 33), 0), 1 => MEtoD128('1' . ('0' x 32), 0),
  2 => MEtoD128('1' . ('0' x 31), 0), 3 => MEtoD128('1' . ('0' x 30), 0),
  4 => MEtoD128('1' . ('0' x 29), 0), 5 => MEtoD128('1' . ('0' x 28), 0),
@@ -347,14 +358,7 @@ for my $key(keys(%Math::Decimal128::dpd_encode)) {
 
 #######################################################################
 #######################################################################
-
-$Math::Decimal128::nan_str  = unpack("a*", pack( "B*", '011111' . ('0' x 122)));
-$Math::Decimal128::ninf_str = unpack("a*", pack( "B*", '11111'  . ('0' x 123)));
-$Math::Decimal128::pinf_str = unpack("a*", pack( "B*", '01111'  . ('0' x 123)));
-$Math::Decimal128::fmt = d128_fmt();
-
-#######################################################################
-#######################################################################
+# Used only wrt BID encoding
 
 sub _decode_mant {
   my $val = shift;
@@ -852,7 +856,7 @@ sub _sanitise_args {
 sub get_expl {
   my $keep = hex2binl(d128_bytes($_[0]));
   my $pre = substr($keep, 1, 2);
-  if(d128_fmt() eq 'DPD') {
+  if($Math::Decimal128::fmt eq 'DPD') {
     if($pre eq '00' || $pre eq '01' || $pre eq '10') {
       return oct('0b' . $pre . substr($keep, 6, 12)) - 6176;
     }
@@ -1019,7 +1023,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
    operator overloading - see "OVERLOADING".
 
    In the documentation that follows, "$mantissa" is a perl scalar
-   holding a string of up to 16 decimal digits:
+   holding a string of up to 34 decimal digits:
     $mantissa = '1234';
     $mantissa = '1234567890123456';
 
@@ -1167,9 +1171,9 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       Assigns the value represented by ($mantissa, $exponent)
       to the Math::Decimal128 object, $d128. This works more
       efficiently than assignMEl(), but works only when the
-      _Decimal128 type is DPD-formatted. (The d128_fmt function
-      will tell you whether the _Decimal128 is DPD-formatted or
-      BID-formatted.)
+      _Decimal128 type is DPD-formatted. ($Math::Decimal128::fmt
+      and the d128_fmt() function  will tell you whether the
+      _Decimal128 is DPD-formatted or BID-formatted.)
 
       eg: assignDPDl($d128, '123459', -6); # 0.123459
 
@@ -1243,7 +1247,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       DPD and BID formats will return different strings - so you
       need to know which encoding (DPD or BID) was used, and then
       call the appropriate decode_*() function for that encoding.
-      The d128_fmt() sub will tell you which encoding is in use.
+      $Math::Decimal128::fmt and the d128_fmt() sub will tell you
+      which encoding is in use.
 
      #########################################
      ($mantissa, $exponent) = D128toME($d128);

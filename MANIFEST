@@ -11,6 +11,8 @@ t/assignPVl.t
 t/boundaries.t
 t/decode_cross_checks.t
 t/decode_d128.t
+t/D128toFSTR.t
+t/D128toRSTR.t
 t/DPDtoD128.t
 t/conv.t
 t/dec_inc.t

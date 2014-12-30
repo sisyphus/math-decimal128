@@ -49,6 +49,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     get_expl get_signl PVtoMEl MEtoPVl
+    D128toFSTR D128toRSTR
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
@@ -57,6 +58,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     get_expl get_signl PVtoMEl MEtoPVl
+    D128toFSTR D128toRSTR
     )]);
 
 #######################################################################
@@ -980,6 +982,108 @@ sub _MEtoBINSTR {
   die "Exponent component length is wrong ($len != 17) in MEtoBINSTR()" if $len != 17;
 
   return $sign . $exp_base_2 . $last_110_bits;
+}
+
+#######################################################################
+#######################################################################
+
+sub D128toFSTR {
+# Converts the argument (M::D128 object) to a string in floating point
+# format - as distinct from scientific notation.
+  my($m, $e) = D128toME($_[0]);
+  return 'nan' if is_NaND128($_[0]);
+  if(is_InfD128($_[0])) {
+    return 'inf' if is_InfD128($_[0])> 0;
+    return '-inf';
+  }
+  return $m . '0' x $e if $e >= 0;
+  my($len, $sign) = (length $m, '');
+  $m =~ s/^\-//;
+  if($len != length $m) {
+    $len--;
+    $sign = '-';
+  }
+  if($len + $e > 0) {
+    substr($m, $e, 0, '.');
+    return $sign . $m;
+  }
+  if($len + $e < 0) {
+    return $sign . '0.' . '0' x -($len + $e) . $m;
+  }
+  return $sign . '0.' . $m;
+}
+
+#######################################################################
+#######################################################################
+
+sub D128toRSTR {
+# As for D128toFSTR, but rounds the string to the no. of
+# decimal places specified by the second arg.
+
+  die "2nd arg to D128toRSTR() must be greater than zero"
+    unless $_[1] >= 0;
+
+  my $dp = $_[1] ? '.' : '';
+
+  my $str = D128toFSTR($_[0]);
+
+  return $str . "$dp" . '0' x $_[1] unless $str =~ /\./;
+
+  my($leading, $trailing) = split /\./, $str;
+  my $len_trail = length $trailing ;
+
+  return $str if ($_[1] == $len_trail);
+
+  if(length($trailing) <= $_[1]) {
+    $trailing .= '0' x ($_[1] - length($trailing));
+    return $leading . "$dp" . $trailing;
+  }
+
+  # $len_trail > specified number of decimal places ($_[1]).
+  # We need to round (to nearest, ties to even) from here on.
+
+  return $leading . "$dp" . substr($trailing, 0, $_[1])
+    if (substr($trailing, $_[1], 1) <= 4) ||
+       (substr($trailing, $_[1]) =~ /^5(0+)?$/ && substr($trailing, $_[1] - 1, 1) % 2 == 0);
+
+  my $to_inc = substr($trailing, 0, $_[1]);
+
+  my $carry = _increment($to_inc); # $carry will either be mt string or '1'. If '1', then we
+                                   # also need to increment $leading.
+
+  return $leading . "$dp" . $to_inc
+    if $carry eq '';
+
+  my($sign, $len_lead) = ('', length($leading));
+
+  $leading =~ s/^\-//;
+
+  if($len_lead != length($leading)) {
+    $sign = '-';
+    $len_lead--;
+  }
+
+  $carry = _increment($leading);
+
+  return $sign . $carry . $leading . "$dp" . $to_inc;
+}
+
+#######################################################################
+#######################################################################
+
+sub _increment {
+  my $carry = 1;
+  my $len = length($_[0]) * -1;
+
+  for(my $offset = -1; $offset >= $len; $offset--) {
+     substr($_[0], $offset, 1) = (substr($_[0], $offset, 1) + 1) % 10;
+     if(substr($_[0], $offset, 1) ne '0') {
+       $carry = '';
+       last;
+     }
+  }
+
+  return $carry;
 }
 
 #######################################################################

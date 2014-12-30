@@ -1,9 +1,10 @@
 Revision history for Perl module Math::Decimal128
 
 0.03
+    - Add D128toFSTR() and D128toRSTR()
 
 0.02
-    - Add DPDtoD128()
+    - Add DPDtoD128() and d128_bytes()
 
 0.01
     - First release

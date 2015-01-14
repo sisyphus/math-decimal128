@@ -4,7 +4,7 @@ use Math::Decimal128 qw(:all);
 
 print "1..1\n";
 
-my $dec1 = Math::Decimal128->new(1.7);
+my $dec1 = NVtoD128(1.7);
 
 my $uv = ~0;
 my $uv_d128 = PVtoD128("$uv");

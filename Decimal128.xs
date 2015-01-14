@@ -536,6 +536,45 @@ void DESTROY(pTHX_ SV *  rop) {
      Safefree(INT2PTR(D128 *, SvIV(SvRV(rop))));
 }
 
+void assignIVl(pTHX_ SV * a, SV * val) {
+
+     if(sv_isobject(a)) {
+       const char * h = HvNAME(SvSTASH(SvRV(a)));
+       if(strEQ(h, "Math::Decimal128")) {
+          *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) = (_Decimal128)SvIV(val);
+       }
+       else croak("Invalid object supplied to Math::Decimal128::assignIVl function");
+     }
+     else croak("Invalid argument supplied to Math::Decimal128::assignIVl function");
+
+}
+
+void assignUVl(pTHX_ SV * a, SV * val) {
+
+     if(sv_isobject(a)) {
+       const char * h = HvNAME(SvSTASH(SvRV(a)));
+       if(strEQ(h, "Math::Decimal128")) {
+          *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) = (_Decimal128)SvUV(val);
+       }
+       else croak("Invalid object supplied to Math::Decimal128::assignUVl function");
+     }
+     else croak("Invalid argument supplied to Math::Decimal128::assignUVl function");
+
+}
+
+void assignNVl(pTHX_ SV * a, SV * val) {
+
+     if(sv_isobject(a)) {
+       const char * h = HvNAME(SvSTASH(SvRV(a)));
+       if(strEQ(h, "Math::Decimal128")) {
+          *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) = (_Decimal128)SvNV(val);
+       }
+       else croak("Invalid object supplied to Math::Decimal128::assignNVl function");
+     }
+     else croak("Invalid argument supplied to Math::Decimal128::assignNVl function");
+
+}
+
 void assignNaNl(pTHX_ SV * a) {
 
      if(sv_isobject(a)) {
@@ -664,13 +703,31 @@ SV * _overload_sub(pTHX_ SV * a, SV * b, SV * third) {
       }
       croak("Invalid object supplied to Math::Decimal128::_overload_sub function");
     }
-
+    /* replaced by _overload_neg
     if(third == &PL_sv_yes) {
       *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a)))) * -1.DL;
       return obj_ref;
     }
-
+    */
     croak("Invalid argument supplied to Math::Decimal128::_overload_sub function");
+}
+
+SV * _overload_neg(pTHX_ SV * a, SV * b, SV * third) {
+
+     _Decimal128 * d128;
+     SV * obj_ref, * obj;
+
+     Newx(d128, 1, _Decimal128);
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_sub function");
+
+     obj_ref = newSV(0);
+     obj = newSVrv(obj_ref, "Math::Decimal128");
+
+     sv_setiv(obj, INT2PTR(IV,d128));
+     SvREADONLY_on(obj);
+
+     *d128 = *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) * -1.DL;
+     return obj_ref;
 }
 
 SV * _overload_div(pTHX_ SV * a, SV * b, SV * third) {
@@ -1127,7 +1184,7 @@ void _d128_bytes(pTHX_ SV * sv) {
 
   sp = mark;
 
-#ifdef WE_HAVE_BENDIAN
+#ifdef WE_HAVE_BENDIAN /* Big Endian architecture */
   for (i = 0; i < n; i++) {
 #else
   for (i = n - 1; i >= 0; i--) {
@@ -1210,7 +1267,7 @@ SV * _DPDtoD128(pTHX_ char * in) {
 }
 
 /*
-   _assignDPD takes 2 args: a Math::DEcimal128 object, and a
+   _assignDPD takes 2 args: a Math::Decimal128 object, and a
    string that encodes the value to be assigned to that object
 */
 void _assignDPD(pTHX_ SV * a, char * in) {
@@ -1419,6 +1476,57 @@ DESTROY (rop)
         return; /* assume stack size is correct */
 
 void
+assignIVl (a, val)
+	SV *	a
+	SV *	val
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        assignIVl(aTHX_ a, val);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
+void
+assignUVl (a, val)
+	SV *	a
+	SV *	val
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        assignUVl(aTHX_ a, val);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
+void
+assignNVl (a, val)
+	SV *	a
+	SV *	val
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        assignNVl(aTHX_ a, val);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
+void
 assignNaNl (a)
 	SV *	a
         PREINIT:
@@ -1476,6 +1584,15 @@ _overload_sub (a, b, third)
 	SV *	third
 CODE:
   RETVAL = _overload_sub (aTHX_ a, b, third);
+OUTPUT:  RETVAL
+
+SV *
+_overload_neg (a, b, third)
+	SV *	a
+	SV *	b
+	SV *	third
+CODE:
+  RETVAL = _overload_neg (aTHX_ a, b, third);
 OUTPUT:  RETVAL
 
 SV *

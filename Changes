@@ -1,6 +1,9 @@
 Revision history for Perl module Math::Decimal128
 
 0.03
+    - Fix bug in overload_sub by adding overload_neg.
+    - No longer allow new() to assign an NV. (NVtoD128 must now be used instead.)
+    - Add assignIVl(), assignUVl() and assignNVl().
     - Add D128toFSTR() and D128toRSTR()
 
 0.02

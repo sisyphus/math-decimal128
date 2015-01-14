@@ -38,6 +38,7 @@ use overload
   '++'    => \&_overload_inc,
   '--'    => \&_overload_dec,
   'int'   => \&_overload_int,
+  'neg'   => \&_overload_neg,
 ;
 
 DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
@@ -50,6 +51,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     get_expl get_signl PVtoMEl MEtoPVl
     D128toFSTR D128toRSTR
+    assignIVl assignUVl assignNVl
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
@@ -59,6 +61,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
     get_expl get_signl PVtoMEl MEtoPVl
     D128toFSTR D128toRSTR
+    assignIVl assignUVl assignNVl
     )]);
 
 #######################################################################
@@ -457,7 +460,7 @@ sub new {
     }
 
     if($type == 3) { # NV
-      return NVtoD128($arg);
+      die "new() cannot be used to assign an NV - use NVtoD128() instead";
     }
 
     if($type == 4) { # PV
@@ -1153,11 +1156,27 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
     Arguments to the overloaded operations must be Math::Decimal128
     objects or integer (IV/UV) values.
 
-     $d128_2 = $d128_1 + 15; # ok
+     $d128_2 = $d128_1 + $d128_0; #ok
+     $d128_2 = $d128_1 + 15;      # ok
 
-     $d128_2 = $d128_1 + 3.1; # Error. Best to either:
-     $d128_2 = $d128_1 + MEtoD128('31',-1); # or (equivalentally):
+     $d128_2 = $d128_1 + 3.1;     # Error.
+     If you really want to add the NV 3.1 you need to:
+     $d128_2 = $d128_1 + NVtoD128(3.1);
+
+     If you instead wish to add the decimal value 3.1:
+     $d128_2 = $d128_1 + MEtoD128('31',-1);
+      or, equivalently:
      $d128_2 = $d128_1 + Math::Decimal128->new('31',-1);
+      or (a little slower):
+     $d128_2 = $d128_1 + PVtoD128('3.1');
+
+    Overloading of strings (PV values) will be enabled when the
+    strtod128() C function becomes more widely available.
+
+    Overloading of floats (NV values) will probably never be enabled
+    as that would make it very easy to inadvertently introduce a value
+    that was not intended.
+
 
 =head1 CREATION & ASSIGNMENT FUNCTIONS
 
@@ -1250,6 +1269,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       If 2 arguments are supplied it uses MEtoD128().
       If one argument is provided, that arg's internal flags are
       used to determine the appropriate function to call.
+      Dies if that argument is an NV - allowing an NV argument makes
+      it very easy to inadvertently assign an unintended value.
 
      #######################
      # Assign using STRtoD128
@@ -1282,9 +1303,12 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       eg: assignDPDl($d128, '123459', -6); # 0.123459
 
      ##########################
+     assignIVl($d128, $iv);
+     assignUVl($d128, $uv);
+     assignNVl($d128, $nv);
      assignPVl($d128, $string);
-      Assigns the value represented by $string to the
-      Math::Decimal128 object, $d128.
+      Assigns the value represented by (resp.) the IV/UV/NV/PV to
+      the Math::Decimal128 object, $d128.
 
       eg: assignPVl($d128, '123459e-6'); # 0.123459
 

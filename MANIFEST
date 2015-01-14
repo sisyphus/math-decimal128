@@ -31,3 +31,6 @@ t/PVtoD128.t
 t/reassign.t
 t/subnormal.t
 t/UV_cmp.t
+t/assignIVl.t
+t/assignUVl.t
+t/assignNVl.t

@@ -3,7 +3,7 @@ use strict;
 use Math::Decimal128 qw(:all);
 use Math::BigInt;
 
-print "1..13\n";
+print "1..14\n";
 
 my $x = Math::Decimal128->new();
 my $badarg1 = 17;
@@ -104,4 +104,12 @@ if(is_InfD128($x) == -1) {print "ok 13\n"}
 else {
   warn "\n13: Expected -Inf, got $x\n";
   print "not ok 13\n";
+}
+
+assignD128($x, PVtoD128(('9' x 17) . ('8' x 17) . 'e-6000'));
+
+if($x == MEtoD128(('9' x 17) . ('8' x 17), -6000)) {print "ok 14\n"}
+else {
+  warn "\n11:Expected 9999999999999999988888888888888888e-6000, got $x\n";
+  print "not ok 14\n";
 }

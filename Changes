@@ -1,6 +1,10 @@
 Revision history for Perl module Math::Decimal128
 
 0.04
+    - Add PV overloading.
+    - Add assignD128().
+    - Rewrite assignPVl in XS. (Now uses _atodecimal XSub.)
+    - Rewrite PVtoD128. (Now uses _atodecimal XSub.)
 
 0.03
     - Fix bug in overload_sub by adding overload_neg.

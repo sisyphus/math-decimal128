@@ -34,3 +34,4 @@ t/UV_cmp.t
 t/assignIVl.t
 t/assignUVl.t
 t/assignNVl.t
+t/overload_PV.t

@@ -132,6 +132,49 @@ SV *  _is_neg_zero_NV(pTHX_ SV * x) {
       return newSViv(1);
 }
 
+D128 _exp10 (int power) {
+
+  _Decimal128 ret = 1.DL;
+
+  if(power < 0) {
+    while(power < -1000) {
+      ret *= 1e-1000DL;
+      power += 1000;
+    }
+    while(power < -100) {
+      ret *= 1e-100DL;
+      power += 100;
+    }
+    while(power < -10) {
+      ret *= 1e-10DL;
+      power += 10;
+    }
+    while(power) {
+      ret *= 1e-1DL;
+      power++;
+    }
+  }
+  else {
+    while(power > 1000) {
+      ret *= 1e1000DL;
+      power -= 1000;
+    }
+    while(power > 100) {
+      ret *= 1e100DL;
+      power -= 100;
+    }
+    while(power > 10) {
+      ret *= 1e10DL;
+      power -= 10;
+    }
+    while(power) {
+      ret *= 1e1DL;
+      power--;
+    }
+  }
+  return ret;
+}
+
 D128 _get_inf(int sign) {
      if(sign < 0) return -1.DL/0.DL;
      return 1.DL/0.DL;
@@ -140,6 +183,73 @@ D128 _get_inf(int sign) {
 D128 _get_nan(void) {
      D128 inf = _get_inf(1);
      return inf/inf;
+}
+
+D128 _atodecimal(char *s) {
+  /* plagiarising code available at
+  https://www.ibm.com/developerworks/community/wikis/home?lang=en_US#!/wiki/Power%20Systems/page/POWER6%20Decimal%20Floating%20Point%20(DFP) */
+  _Decimal128 top = 0.DL, bot = 0.DL, result, div = 10.DL;
+  int negative = 0, i = 0, exponent = 0;
+
+  if(s[0] == '-') {
+    negative = -1;
+    s++;
+  }
+  if(s[0] == '+') {
+    s++;
+  }
+
+  /* 'e' and 'E' are acceptable later on - but not accepatable at this point */
+  if(s[0] == 'e' || s[0] == 'E') return 0.DL;
+
+  if((s[0] == 'i' || s[0] == 'I') &&
+     (s[1] == 'n' || s[1] == 'N') &&
+     (s[2] == 'f' || s[2] == 'F')) return _get_inf(negative);
+
+  if((s[0] == 'n' || s[0] == 'N') &&
+     (s[1] == 'a' || s[1] == 'A') &&
+     (s[2] == 'n' || s[2] == 'N')) return _get_nan();
+
+  for(; isdigit(*s); s++) {
+    top = top * 10.DL;
+    top = top + *s - '0';
+  }
+  if(*s == '.') {
+    s++;
+    for(i = 0; isdigit(s[i]) ;i++) {
+      bot += (_Decimal128)(s[i] - '0') / (_Decimal128)div;
+      div *= 10.DL;
+    }
+  }
+  result = top + bot;
+  if(negative) result = -result;
+
+  if(result == 0.DL) return result;
+
+  if(s[i] == 'e' || s[i] == 'E') {
+    s += i + 1;
+    if(*s == '-') {
+      s++;
+      for(i = 0; isdigit(s[i]);i++) exponent = (exponent * 10) + (s[i] - '0');
+      while(exponent > 6176) {
+        result /= 10.DL;
+        exponent--;
+      }
+      result *= _exp10(-exponent);
+      return result;
+    }
+    if(*s == '+') s++;
+    for(i = 0; isdigit(s[i]);i++) exponent = (exponent * 10) + (s[i] - '0');
+    while(exponent > 6144) {
+      result *= 10.DL;
+      exponent--;
+    }
+    result *= _exp10(exponent);
+    return result;
+
+  }
+
+  return result;
 }
 
 SV * _DEC128_MAX(pTHX) {
@@ -498,6 +608,23 @@ SV * IVtoD128(pTHX_ SV * x) {
      return obj_ref;
 }
 
+SV * PVtoD128(pTHX_ char * x) {
+     D128 * d128;
+     SV * obj_ref, * obj;
+
+     Newx(d128, 1, _Decimal128);
+     if(d128 == NULL) croak("Failed to allocate memory in PVtoD128 function");
+
+     obj_ref = newSV(0);
+     obj = newSVrv(obj_ref, "Math::Decimal128");
+
+     *d128 = _atodecimal(x);
+
+     sv_setiv(obj, INT2PTR(IV,d128));
+     SvREADONLY_on(obj);
+     return obj_ref;
+}
+
 SV * STRtoD128(pTHX_ char * x) {
 #ifdef STRTOD128_AVAILABLE
      D128 * d128;
@@ -575,6 +702,24 @@ void assignNVl(pTHX_ SV * a, SV * val) {
 
 }
 
+void assignPVl(pTHX_ SV * a, char * s) {
+     *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) = _atodecimal(s);
+}
+
+void assignD128(pTHX_ SV * a, SV * val) {
+
+     if(sv_isobject(a) && sv_isobject(val)) {
+       const char * h =  HvNAME(SvSTASH(SvRV(a)));
+       const char * hh = HvNAME(SvSTASH(SvRV(val)));
+       if(strEQ(h, "Math::Decimal128") && strEQ(hh, "Math::Decimal128")) {
+          *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) = *(INT2PTR(_Decimal128 *, SvIV(SvRV(val))));
+       }
+       else croak("Invalid object supplied to Math::Decimal128::assignD128 function");
+     }
+     else croak("Invalid argument supplied to Math::Decimal128::assignD128 function");
+
+}
+
 void assignNaNl(pTHX_ SV * a) {
 
      if(sv_isobject(a)) {
@@ -623,6 +768,11 @@ SV * _overload_add(pTHX_ SV * a, SV * b, SV * third) {
       return obj_ref;
     }
 
+    if(SvPOK(b) && !SvNOK(b)) {
+      *d128 = *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) + _atodecimal(SvPV_nolen(b));
+      return obj_ref;
+    }
+
     if(sv_isobject(b)) {
       const char *h = HvNAME(SvSTASH(SvRV(b)));
       if(strEQ(h, "Math::Decimal128")) {
@@ -655,6 +805,11 @@ SV * _overload_mul(pTHX_ SV * a, SV * b, SV * third) {
 
     if(SvIOK(b)) {
       *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a)))) * SvIV(b);
+      return obj_ref;
+    }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      *d128 = *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) * _atodecimal(SvPV_nolen(b));
       return obj_ref;
     }
 
@@ -692,6 +847,12 @@ SV * _overload_sub(pTHX_ SV * a, SV * b, SV * third) {
     if(SvIOK(b)) {
       if(third == &PL_sv_yes) *d128 = SvIV(b) - *(INT2PTR(D128 *, SvIV(SvRV(a))));
       else *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a)))) - SvIV(b);
+      return obj_ref;
+    }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(third == &PL_sv_yes) *d128 = _atodecimal(SvPV_nolen(b)) - *(INT2PTR(D128 *, SvIV(SvRV(a))));
+      else *d128 = *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) - _atodecimal(SvPV_nolen(b));
       return obj_ref;
     }
 
@@ -756,6 +917,12 @@ SV * _overload_div(pTHX_ SV * a, SV * b, SV * third) {
       return obj_ref;
     }
 
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(third == &PL_sv_yes) *d128 = _atodecimal(SvPV_nolen(b)) / *(INT2PTR(D128 *, SvIV(SvRV(a))));
+      else *d128 = *(INT2PTR(_Decimal128 *, SvIV(SvRV(a)))) / _atodecimal(SvPV_nolen(b));
+      return obj_ref;
+    }
+
     if(sv_isobject(b)) {
       const char *h = HvNAME(SvSTASH(SvRV(b)));
       if(strEQ(h, "Math::Decimal128")) {
@@ -777,6 +944,11 @@ SV * _overload_add_eq(pTHX_ SV * a, SV * b, SV * third) {
     }
     if(SvIOK(b)) {
       *(INT2PTR(D128 *, SvIV(SvRV(a)))) += SvIV(b);
+      return a;
+    }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      *(INT2PTR(D128 *, SvIV(SvRV(a)))) += _atodecimal(SvPV_nolen(b));
       return a;
     }
 
@@ -806,6 +978,11 @@ SV * _overload_mul_eq(pTHX_ SV * a, SV * b, SV * third) {
       return a;
     }
 
+    if(SvPOK(b) && !SvNOK(b)) {
+      *(INT2PTR(D128 *, SvIV(SvRV(a)))) *= _atodecimal(SvPV_nolen(b));
+      return a;
+    }
+
     if(sv_isobject(b)) {
       const char *h = HvNAME(SvSTASH(SvRV(b)));
       if(strEQ(h, "Math::Decimal128")) {
@@ -829,6 +1006,11 @@ SV * _overload_sub_eq(pTHX_ SV * a, SV * b, SV * third) {
     }
     if(SvIOK(b)) {
       *(INT2PTR(D128 *, SvIV(SvRV(a)))) -= SvIV(b);
+      return a;
+    }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      *(INT2PTR(D128 *, SvIV(SvRV(a)))) -= _atodecimal(SvPV_nolen(b));
       return a;
     }
 
@@ -858,6 +1040,11 @@ SV * _overload_div_eq(pTHX_ SV * a, SV * b, SV * third) {
       return a;
     }
 
+    if(SvPOK(b) && !SvNOK(b)) {
+      *(INT2PTR(D128 *, SvIV(SvRV(a)))) /= _atodecimal(SvPV_nolen(b));
+      return a;
+    }
+
     if(sv_isobject(b)) {
       const char *h = HvNAME(SvSTASH(SvRV(b)));
       if(strEQ(h, "Math::Decimal128")) {
@@ -883,6 +1070,11 @@ SV * _overload_equiv(pTHX_ SV * a, SV * b, SV * third) {
        return newSViv(0);
      }
 
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) == _atodecimal(SvPV_nolen(b))) return newSViv(1);
+      return newSViv(0);
+    }
+
      if(sv_isobject(b)) {
        const char *h = HvNAME(SvSTASH(SvRV(b)));
        if(strEQ(h, "Math::Decimal128")) {
@@ -905,6 +1097,11 @@ SV * _overload_not_equiv(pTHX_ SV * a, SV * b, SV * third) {
        if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) != SvIV(b)) return newSViv(1);
        return newSViv(0);
      }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) != _atodecimal(SvPV_nolen(b))) return newSViv(1);
+      return newSViv(0);
+    }
 
      if(sv_isobject(b)) {
        const char *h = HvNAME(SvSTASH(SvRV(b)));
@@ -929,6 +1126,11 @@ SV * _overload_lt(pTHX_ SV * a, SV * b, SV * third) {
        return newSViv(0);
      }
 
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) < _atodecimal(SvPV_nolen(b))) return newSViv(1);
+      return newSViv(0);
+    }
+
      if(sv_isobject(b)) {
        const char *h = HvNAME(SvSTASH(SvRV(b)));
        if(strEQ(h, "Math::Decimal128")) {
@@ -949,6 +1151,11 @@ SV * _overload_gt(pTHX_ SV * a, SV * b, SV * third) {
 
     if(SvIOK(b)) {
       if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) > SvIV(b)) return newSViv(1);
+      return newSViv(0);
+    }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) > _atodecimal(SvPV_nolen(b))) return newSViv(1);
       return newSViv(0);
     }
 
@@ -975,6 +1182,11 @@ SV * _overload_lte(pTHX_ SV * a, SV * b, SV * third) {
        return newSViv(0);
      }
 
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) <= _atodecimal(SvPV_nolen(b))) return newSViv(1);
+      return newSViv(0);
+    }
+
      if(sv_isobject(b)) {
        const char *h = HvNAME(SvSTASH(SvRV(b)));
        if(strEQ(h, "Math::Decimal128")) {
@@ -997,6 +1209,11 @@ SV * _overload_gte(pTHX_ SV * a, SV * b, SV * third) {
        if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) >= SvIV(b)) return newSViv(1);
        return newSViv(0);
      }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) >= _atodecimal(SvPV_nolen(b))) return newSViv(1);
+      return newSViv(0);
+    }
 
      if(sv_isobject(b)) {
        const char *h = HvNAME(SvSTASH(SvRV(b)));
@@ -1022,6 +1239,13 @@ SV * _overload_spaceship(pTHX_ SV * a, SV * b, SV * third) {
       if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) > SvIV(b)) return newSViv(1);
       if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) < SvIV(b)) return newSViv(-1);
       if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) == SvIV(b)) return newSViv(0);
+      return &PL_sv_undef; /* Math::Decimal128 object (1st arg) is a nan */
+    }
+
+    if(SvPOK(b) && !SvNOK(b)) {
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) > _atodecimal(SvPV_nolen(b)))  return newSViv(1);
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) < _atodecimal(SvPV_nolen(b)))  return newSViv(-1);
+      if(*(INT2PTR(D128 *, SvIV(SvRV(a)))) == _atodecimal(SvPV_nolen(b))) return newSViv(0);
       return &PL_sv_undef; /* Math::Decimal128 object (1st arg) is a nan */
     }
 
@@ -1442,6 +1666,13 @@ CODE:
 OUTPUT:  RETVAL
 
 SV *
+PVtoD128 (x)
+	char *	x
+CODE:
+  RETVAL = PVtoD128 (aTHX_ x);
+OUTPUT:  RETVAL
+
+SV *
 STRtoD128 (x)
 	char *	x
 CODE:
@@ -1518,6 +1749,40 @@ assignNVl (a, val)
         PPCODE:
         temp = PL_markstack_ptr++;
         assignNVl(aTHX_ a, val);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
+void
+assignPVl (a, s)
+	SV *	a
+	char *	s
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        assignPVl(aTHX_ a, s);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
+
+void
+assignD128 (a, val)
+	SV *	a
+	SV *	val
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        assignD128(aTHX_ a, val);
         if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;

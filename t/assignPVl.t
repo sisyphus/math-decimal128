@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Math::Decimal128 qw(:all);
 
-my $t = 62;
+my $t = 85;
 
 print "1..$t\n";
 
@@ -419,17 +419,19 @@ else {
 
 assignPVl($d128, '-46.98317e180');
 
-if("$d128" eq '-4698317e175') {print "ok 43\n"}
+if("$d128" eq '-4698317e175' && nnumflagl() == 0) {print "ok 43\n"}
 else {
   warn "\nExpected -4698317e175\nGot $d128\n";
+  warn "nnumflagl expected 0, got ", nnumflagl(), "\n";
   print "not ok 43\n";
 }
 
 assignPVl($d128, '-46.98317e180z1');
 
-if("$d128" eq '-4698317e175') {print "ok 44\n"}
+if("$d128" eq '-4698317e175' && nnumflagl() == 1) {print "ok 44\n"}
 else {
   warn "\nExpected -4698317e175\nGot $d128\n";
+  warn "nnumflagl expected 1, got ", nnumflagl(), "\n";
   print "not ok 44\n";
 }
 
@@ -570,11 +572,216 @@ else {
 
 assignPVl($d128, '1312.67366122681036974666750688613e-6177');
 
-if("$d128" eq '131e-6176') {print "ok 62\n"}
+if("$d128" eq '131e-6176' && nnumflagl() == 1) {print "ok 62\n"}
 else {
   warn "\nExpected 131e-6176\nGot $d128\n";
+  warn "nnumflagl expected 1, got ", nnumflagl(), "\n";
   print "not ok 62\n";
 }
+
+assignPVl($d128, '-');
+
+if("$d128" eq '-0') {print "ok 63\n"}
+else {
+  warn "\nExpected -0\nGot $128\n";
+  print "not ok 63\n";
+}
+
+assignPVl($d128, ' ');
+
+if("$d128" eq '0' && nnumflagl() == 3) {print "ok 64\n"}
+else {
+  warn "\nExpected 0\nGot $d128\n";
+  warn "nnumflagl expected 3, got ", nnumflagl(), "\n";
+  print "not ok 64\n";
+}
+
+#############################
+# Do some checks for spaces #
+#############################
+
+assignPVl($d128, '- 23');
+
+if("$d128" eq '-0' && nnumflagl() == 4) {print "ok 65\n"}
+else {
+  warn "\nExpected -0\nGot $d128\n";
+  warn "nnumflagl expected 4, got ", nnumflagl(), "\n";
+  print "not ok 65\n";
+}
+
+assignPVl($d128, " \r \n \t \f -23e-2");
+
+if("$d128" eq '-23e-2') {print "ok 66\n"}
+else {
+  warn "\nExpected -23e-2\nGot $d128\n";
+  print "not ok 66\n";
+}
+
+assignPVl($d128, " \r \n \t \f -23 e-2");
+
+if("$d128" eq '-23e0' && nnumflagl() == 5) {print "ok 67\n"}
+else {
+  warn "\nExpected -23e0\nGot $d128\n";
+  warn "nnumflagl expected 5, got ", nnumflagl(), "\n";
+  print "not ok 67\n";
+}
+
+assignPVl($d128, " -23e -2");
+
+if("$d128" eq '-23e0') {print "ok 68\n"}
+else {
+  warn "\nExpected -23e0\nGot $d128\n";
+  print "not ok 68\n";
+}
+
+assignPVl($d128, "2 3e-2");
+
+if("$d128" eq '2e0' && nnumflagl() == 7) {print "ok 69\n"}
+else {
+  warn "\nExpected 2e0\nGot $d128\n";
+  warn "nnumflagl expected 7, got ", nnumflagl(), "\n";
+  print "not ok 69\n";
+}
+
+assignPVl($d128, ' inf  ');
+
+if(is_InfD128($d128) == 1) {print "ok 70\n"}
+else {
+  warn "Inf: $d128\n";
+  print "not ok 70\n";
+}
+
+assignPVl($d128, ' +inf  ');
+
+if(is_InfD128($d128) == 1) {print "ok 71\n"}
+else {
+  warn "Inf: $d128\n";
+  print "not ok 71\n";
+}
+
+assignPVl($d128, ' -0.162.235');
+
+if("$d128" eq '-162e-3' && nnumflagl() == 8) {print "ok 72\n"}
+else {
+  warn "\nExpected -162e-3\nGot $d128\n";
+  warn "nnumflagl expected 8, got ", nnumflagl(), "\n";
+  print "not ok 72\n";
+}
+
+###################################
+# Do some checks for non-numerics #
+###################################
+
+assignPVl($d128, '-a23');
+
+if("$d128" eq '-0' && nnumflagl() == 9) {print "ok 73\n"}
+else {
+  warn "\nExpected -0\nGot $d128\n";
+  warn "nnumflagl expected 9, got ", nnumflagl(), "\n";
+  print "not ok 73\n";
+}
+
+assignPVl($d128, " \r \n \t \f -23e-2.");
+
+if("$d128" eq '-23e-2') {print "ok 74\n"}
+else {
+  warn "\nExpected -23e-2\nGot $d128\n";
+  print "not ok 74\n";
+}
+
+assignPVl($d128, " \r \n \t \f -23ae-2");
+
+if("$d128" eq '-23e0' && nnumflagl() == 11) {print "ok 75\n"}
+else {
+  warn "\nExpected -23e0\nGot $d128\n";
+  warn "nnumflagl expected 11, got ", nnumflagl(), "\n";
+  print "not ok 75\n";
+}
+
+assignPVl($d128, " -23ea-2");
+
+if("$d128" eq '-23e0') {print "ok 76\n"}
+else {
+  warn "\nExpected -23e0\nGot $d128\n";
+  print "not ok 76\n";
+}
+
+assignPVl($d128, "2a3e-2");
+
+if("$d128" eq '2e0') {print "ok 77\n"}
+else {
+  warn "\nExpected 2e0\nGot $d128\n";
+  print "not ok 77\n";
+}
+
+assignPVl($d128, ' infa ');
+
+if(is_InfD128($d128) == 1) {print "ok 78\n"}
+else {
+  warn "Inf: $d128\n";
+  print "not ok 78\n";
+}
+
+assignPVl($d128, ' +infa  ');
+
+if(is_InfD128($d128) == 1) {print "ok 79\n"}
+else {
+  warn "Inf: $d128\n";
+  print "not ok 79\n";
+}
+
+assignPVl($d128, ' -0.162.a235');
+
+if("$d128" eq '-162e-3') {print "ok 80\n"}
+else {
+  warn "\nExpected -162e-3\nGot $d128\n";
+  print "not ok 80\n";
+}
+
+assignPVl($d128, 'a23');
+
+if("$d128" eq '0') {print "ok 81\n"}
+else {
+  warn "\nExpected 0\nGot $d128\n";
+  print "not ok 81\n";
+}
+
+assignPVl($d128, 'ae23');
+
+if("$d128" eq '0') {print "ok 82\n"}
+else {
+  warn "\nExpected 0\nGot $d128\n";
+  print "not ok 82\n";
+}
+
+assignPVl($d128, 'a.23');
+
+if("$d128" eq '0' && nnumflagl() == 19) {print "ok 83\n"}
+else {
+  warn "\nExpected 0\nGot $d128\n";
+  warn "nnumflagl expected 19, got ", nnumflagl(), "\n";
+  print "not ok 83\n";
+}
+
+set_nnuml(5);
+
+if(nnumflagl() == 5) {print "ok 84\n"}
+else {
+  warn "\nnnumflagl expected 5, got ", nnumflagl(), "\n";
+  print "not ok 84\n";
+}
+
+clear_nnuml();
+
+if(nnumflagl() == 0) {print "ok 85\n"}
+else {
+  warn "\nnnumflagl expected 0, got ", nnumflagl(), "\n";
+  print "not ok 85\n";
+}
+
+
+#################################
+#################################
 
 sub random_select {
   my $ret = '';
@@ -603,3 +810,6 @@ sub me2pv {
   #print "$ret\n";
   return $ret;
 }
+
+###################################
+###################################

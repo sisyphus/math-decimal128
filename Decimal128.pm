@@ -52,6 +52,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     get_expl get_signl PVtoMEl MEtoPVl
     D128toFSTR D128toRSTR
     assignIVl assignUVl assignNVl assignD128 assignPVl assignDPDl
+    nnumflagl clear_nnuml set_nnuml
     );
 
 %Math::Decimal128::EXPORT_TAGS = (all => [qw(
@@ -62,6 +63,7 @@ DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
     get_expl get_signl PVtoMEl MEtoPVl
     D128toFSTR D128toRSTR
     assignIVl assignUVl assignNVl assignPVl assignDPDl assignD128
+    nnumflagl clear_nnuml set_nnuml
     )]);
 
 #######################################################################
@@ -1180,8 +1182,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
     The following create and assign a new Math::Decimal128 object.
 
-     ######################
-     # Assign from a string
+     ##################################
+     # Create, and assign from a string
      $d128 = PVtoD128($string);
 
       eg: $d128 = PVtoD128('-9427199254740993');
@@ -1189,11 +1191,14 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
           $d128 = Math::Decimal128->new('-978719925474.0993e-20');
           $d128 = Math::Decimal128->new('-9307199254740993e-23');
 
-      Not guaranteed to work correctly if the string contains space(s).
-      Does no checks on its arg. The arg can be in either integer
-      format or scientific notation, float format or (+-)inf/nan.
-      Doing Math::Decimal128->new($string) will also create and
-      assign using PVtoD128().
+      The perl API function looks_like_number() is run on the arg. If
+      it returns false, then a global non-numeric flag which was
+      initialised to 0 is incremented. The nnumflag function returns
+      the current value of this global. It can be cleared to 0 by
+      running clear_nnum() and set to x with set_nnuml(x). The arg can be
+      in either integer format, scientific notation, float format or
+      (+-)inf/nan. Doing Math::Decimal128->new($string) will also create
+      and assign using PVtoD128().
       PVtoD128 is now a much improved way of creating and assigning - so
       much so that I'm now recommending it as the preferred way of
       creating a Math::Decimal128 object.
@@ -1203,8 +1208,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
        or simply:
        $d128 = PVtoD128($mantissa . 'e' . $exponent);
 
-     ###################################
-     # Assign from mantissa and exponent
+     ###############################################
+     # Create, and assign from mantissa and exponent
      $d128 = MEtoD128($mantissa, $exponent);
 
       eg: $d128 = MEtoD128('12345', -3); # 12.345
@@ -1212,25 +1217,28 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       It's a little kludgy, but this is a safe and sure way
       of creating the Math::Decimal128 object with the intended
       value.
+      Checks are conducted to ensure that the arguments are suitable.
       The mantissa string must represent an integer. (There's an
       implicit '.0' at the end of the string.)
-      Checks are conducted to ensure that the arguments are suitable.
-      The mantissa string must represent an integer.
+      Doing Math::Decimal64->new($mantissa, $exponent) will also
+      create and assign using MEtoD128(), and is equally acceptable.
 
-     ###################################
+     ###############################################
+     # Create, and assign from mantissa and exponent
      $d128 = DPDtoD128($mantissa, $exponent);
 
       eg: $d128 = DPDtoD128('12345', -3); # 12.345
 
-      This is the quickest way of creating the Math::Decimal128 object
-      with the intended value - but works only for DPD format - ie
-      only if d128_fmt() returns 'DPD'.
+      This is perhaps a quicker way of creating the Math::Decimal128
+      object with the intended value - but works only for DPD format
+      - ie only if d128_fmt() returns 'DPD'.
       The mantissa string can be 'inf' or 'nan', optionally prefixed
       with '-' or '+'. Otherwise, the mantissa string must
-      represent an integer value - ie cannot contain a decimal point.
+      represent an integer value (with implied '.0' at the end) - ie
+      cannot contain a decimal point.
 
-     #####################################
-     # Assign from a UV (unsigned integer)
+     #################################################
+     # Create, and assign from a UV (unsigned integer)
      $d128 = UVtoD128($uv);
 
       eg: $d128 = UVtoD128(~0);
@@ -1239,8 +1247,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       using UVtoD128().
       Assigns the UV value to the Math::Decimal128 object.
 
-     ####################################
-     # Assign from an IV (signed integer)
+     ################################################
+     # Create, and assign from an IV (signed integer)
      $d128 = IVtoD128($iv);
 
       eg: $d128 = IVtoD128(-15); # -15.0
@@ -1249,15 +1257,15 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       using IVtoD128().
       Assigns the UV value to the Math::Decimal128 object.
 
-     ################################################
-     # Assign from an existing Math::Decimal128 object
+     #############################################################
+     # Create, and assign from an existing Math::Decimal128 object
      $d128 = D128toD128($d128_0);
      Also:
       $d128 = Math::Decimal128->new($d128_0);
       $d128 = $d128_0; # uses overloaded '='
 
-     ###########################
-     # Assign from an NV (real))
+     #######################################
+     # Create, and assign from an NV (real))
      $d128 = NVtoD128($nv);
 
       eg: $d128 = NVtoD128(-3.25);
@@ -1267,8 +1275,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       Might not always assign the value you think it does. (Eg,
       see test 5 in t/overload_cmp.t.)
 
-     ####################
-     # Assign using new()
+     ################################
+     # Create, and assign using new()
      $d128 = Math::Decimal128->new([$arg1, [$arg2]]);
       This function calls one of the above functions. It
       determines the appropriate function to call by examining
@@ -1281,8 +1289,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       Dies if that argument is an NV - allowing an NV argument makes
       it very easy to inadvertently assign an unintended value.
 
-     #######################
-     # Assign using STRtoD128
+     ####################################
+     # Create, and assign using STRtoD128
      $d128 = STRtoD128($string);
       If your C compiler provides the strtod128 function &&
       you configured the Makefile.PL to enable access to that
@@ -1315,7 +1323,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
      assignIVl ($d128, $iv);
      assignUVl ($d128, $uv);
      assignNVl ($d128, $nv);
-     assignPVl ($d128, $string);
+     assignPVl ($d128, $string); # see PVtoD128 docs (above)
      assignD128($d128, $d128_0);
       Assigns the value represented by the second arg (resp. the
       IV,UV, NV,PV, Math::Decimal128 object) to the
@@ -1425,6 +1433,26 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       equates to the decimal -123.45. Uses D128toME().
 
 =head1 OTHER FUNCTIONS
+
+     #################
+     $iv = nnumflagl();
+      Returns the value of the non-numeric flag. This flag is
+      initialized to zero, but incemented by 1 whenever the
+      _atodecimal function (used internally by assignPV and
+      PVtoD128) is handed a string containing non-numeric
+      characters. The value of the flag therefore tells us how
+      many times _atodecimal() was handed such a string. The flag
+      can be reset to 0 by running clear_nnuml().
+
+     ##############
+     set_nnuml($iv);
+      Resets the global non-numeric flag to the value specified by
+      $iv.
+
+     #############
+     clear_nnuml();
+      Resets the global non-numeric flag to 0.(Essentially the same
+      as running set_nnuml(0).)
 
      ################################
      ($man, $exp) = PVtoMEl($string);

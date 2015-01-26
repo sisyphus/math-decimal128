@@ -494,19 +494,16 @@ sub MEtoD128 {
   # Check that 2 args are supplied
   die "MEtoD128 takes 2 args" if @_ != 2;
 
-  my $arg1 = shift;
-  my $arg2 = shift;
+  my ($arg1, $arg2) = (shift, shift);
 
-  die "Invalid 1st arg ($arg1) to MEtoD128" if $arg1 =~ /[^0-9\-]/;
-  die "Invalid 2nd arg ($arg2) to MEtoD128" if $arg2 =~ /[^0-9\-]/;
+  die "Invalid 1st arg ($arg1) to MEtoD128" if $arg1 =~ /[^0-9\-\+]/;
+  die "Invalid 2nd arg ($arg2) to MEtoD128" if $arg2 =~ /[^0-9\-\+]/;
+
+  $arg1 =~ s/^\+//;
+  $arg2 =~ s/^\+//;
+  my $sign = $arg1 =~ s/^\-// ? '-' : '';
 
   my $len_1 = length($arg1);
-  my $sign = $arg1 =~ /^\-/ ? '-' : '';
-  if($sign) {
-    $len_1--;
-    $arg1 =~ s/^\-//;
-  }
-
 
   if($len_1 > 34 || $arg2 < -6176) {
     die "$arg1 exceeds _Decimal128 precision. It needs to be shortened to no more than 34 decimal digits"
@@ -785,7 +782,7 @@ sub decode_bidl {
 
 #######################################################################
 #######################################################################
-# Now uses XSub of same name
+# Now using XSub of same name
 # sub PVtoD128 {
 #
 #  my($arg1, $arg2) = PVtoMEl($_[0]);
@@ -1134,7 +1131,8 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
    operator overloading - see "OVERLOADING".
 
    In the documentation that follows, "$mantissa" is a perl scalar
-   holding a string of up to 34 decimal digits:
+   holding a string of up to 34 decimal digits, optionally prefixed
+   with a '+' or '-' sign:
     $mantissa = '1234';
     $mantissa = '1234567890123456';
 
@@ -1551,7 +1549,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
     This program is free software; you may redistribute it and/or
     modify it under the same terms as Perl itself.
-    Copyright 2014 Sisyphus
+    Copyright 2014-15 Sisyphus
 
 =head1 AUTHOR
 

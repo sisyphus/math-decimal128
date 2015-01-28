@@ -1,5 +1,7 @@
 Revision history for Perl module Math::Decimal128
 
+0.05
+
 0.04
     - Add PV overloading.
     - Add assignD128().

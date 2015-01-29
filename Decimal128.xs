@@ -185,7 +185,7 @@ D128 _atodecimal(pTHX_ char *s) {
   _Decimal128 top = 0.DL, bot = 0.DL, result, div = 10.DL;
   int negative = 0, i = 0, exponent = 0;
 
-  if(!looks_like_number(newSVpv(s, 0))) nnum++; /* set the "nnum" gloabal */
+  if(!looks_like_number(newSVpv(s, 0))) nnum++; /* set the "nnum" global */
 
   while(s[0] == ' ' || s[0] == '\t' || s[0] == '\n' || s[0] == '\r' || s[0] == '\f') s++;
 
@@ -220,7 +220,7 @@ D128 _atodecimal(pTHX_ char *s) {
     }
   }
   result = top + bot;
-  if(negative) result = -result;
+  if(negative) result *= -1.DL;
 
   if(result == 0.DL) return result;
 
@@ -1507,11 +1507,11 @@ void _assignDPD(pTHX_ SV * a, char * in) {
   *(INT2PTR(D128 *, SvIV(SvRV(a)))) = out;
 }
 
-int nnumflagl() {
+int nnumflagl(void) {
   return nnum;
 }
 
-void clear_nnuml() {
+void clear_nnuml(void) {
   nnum = 0;
 }
 
@@ -1520,7 +1520,10 @@ void set_nnuml(int x) {
 }
 
 
-
+int _lln(pTHX_ SV * x) {
+  if(looks_like_number(x)) return 1;
+  return 0;
+}
 MODULE = Math::Decimal128  PACKAGE = Math::Decimal128
 
 PROTOTYPES: DISABLE
@@ -2138,8 +2141,10 @@ _assignDPD (a, in)
 int
 nnumflagl ()
 
+
 void
 clear_nnuml ()
+
         PREINIT:
         I32* temp;
         PPCODE:
@@ -2168,4 +2173,11 @@ set_nnuml (x)
         }
         /* must have used dXSARGS; list context implied */
         return; /* assume stack size is correct */
+
+int
+_lln (x)
+	SV *	x
+CODE:
+  RETVAL = _lln (aTHX_ x);
+OUTPUT:  RETVAL
 

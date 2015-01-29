@@ -1,6 +1,8 @@
 Revision history for Perl module Math::Decimal128
 
 0.05
+    - Workarounds in _atodecimal() and assignPVl.t to cater for broken
+      compiler/libc handling of signed zero _Decimal128 values.
 
 0.04
     - Add PV overloading.

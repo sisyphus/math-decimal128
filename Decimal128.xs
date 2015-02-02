@@ -241,8 +241,6 @@ _Decimal128 _atodecimal(char * s) {
   result = top + bot;
   if(negative) result *= -1.DL;
 
-  if(result == 0.DL) return result;
-
   if(s[i] == 'e' || s[i] == 'E') {
     s += i + 1;
     if(*s == '-') {

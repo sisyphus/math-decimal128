@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Math::Decimal128 qw(:all);
 
-my $t = 85;
+my $t = 86;
 
 print "1..$t\n";
 
@@ -805,6 +805,15 @@ if(nnumflagl() == 0) {print "ok 85\n"}
 else {
   warn "\nnnumflagl expected 0, got ", nnumflagl(), "\n";
   print "not ok 85\n";
+}
+
+assignPVl($d128, '0 but true');
+
+if("$d128" eq '0' && nnumflagl() == 1) {print "ok 86\n"}
+else {
+  warn "\nExpected 0\nGot $d128\n";
+  warn "nnumflagl expected 1, got ", nnumflagl(), "\n";
+  print "not ok 86\n";
 }
 
 

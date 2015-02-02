@@ -1189,10 +1189,11 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
           $d128 = Math::Decimal128->new('-978719925474.0993e-20');
           $d128 = Math::Decimal128->new('-9307199254740993e-23');
 
-      The perl API function looks_like_number() is run on the arg. If
-      it returns false, then a global non-numeric flag which was
-      initialised to 0 is incremented. The nnumflag function returns
-      the current value of this global. It can be cleared to 0 by
+      If the string arg contains characters that don't make sense in
+      numeric context, then a global non-numeric flag which was
+      initialised to 0 is incremented - and the value assigned is in
+      accordance with perl's usual rules. The nnumflag function returns
+      the current value of the global. It can be cleared to 0 by
       running clear_nnum() and set to x with set_nnuml(x). The arg can be
       in either integer format, scientific notation, float format or
       (+-)inf/nan. Doing Math::Decimal128->new($string) will also create

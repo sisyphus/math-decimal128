@@ -2,6 +2,11 @@ use strict;
 use warnings;
 use Math::Decimal128 qw(:all);
 
+
+*nnumflagl   = \&Math::Decimal128::nnumflag;
+*set_nnuml   = \&Math::Decimal128::set_nnum;
+*clear_nnuml = \&Math::Decimal128::clear_nnum;
+
 my $t = 87;
 
 print "1..$t\n";

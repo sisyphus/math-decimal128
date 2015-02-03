@@ -1,7 +1,9 @@
 Revision history for Perl module Math::Decimal128
 
 0.06
-    - Remove looks_like_number() from _atodecimal
+    - Remove looks_like_number() from _atodecimal.
+    - Rename nnumflagl, set_nnuml, clear_nnuml to nnumflag, set_nnum and
+      clear_nnum and no longer export them.
 
 0.05
     - Workarounds in _atodecimal() and assignPVl.t to cater for broken

@@ -1553,15 +1553,15 @@ void _assignDPD(pTHX_ SV * a, char * in) {
   *(INT2PTR(D128 *, SvIV(SvRV(a)))) = out;
 }
 
-int nnumflagl(void) {
+int nnumflag(void) {
   return nnum;
 }
 
-void clear_nnuml(void) {
+void clear_nnum(void) {
   nnum = 0;
 }
 
-void set_nnuml(int x) {
+void set_nnum(int x) {
   nnum = x;
 }
 
@@ -2185,17 +2185,17 @@ _assignDPD (a, in)
         return; /* assume stack size is correct */
 
 int
-nnumflagl ()
+nnumflag ()
 
 
 void
-clear_nnuml ()
+clear_nnum ()
 
         PREINIT:
         I32* temp;
         PPCODE:
         temp = PL_markstack_ptr++;
-        clear_nnuml();
+        clear_nnum();
         if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;
@@ -2205,13 +2205,13 @@ clear_nnuml ()
         return; /* assume stack size is correct */
 
 void
-set_nnuml (x)
+set_nnum (x)
 	int	x
         PREINIT:
         I32* temp;
         PPCODE:
         temp = PL_markstack_ptr++;
-        set_nnuml(x);
+        set_nnum(x);
         if (PL_markstack_ptr != temp) {
           /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;

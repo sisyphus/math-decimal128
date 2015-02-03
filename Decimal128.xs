@@ -188,6 +188,8 @@ _Decimal128 _atodecimal(char * s) {
   _Decimal128 top = 0.DL, bot = 0.DL, result = 0.DL, div = 10.DL;
   int negative = 0, i = 0, exponent = 0;
 
+  if(!strcmp(s, "0 but true")) return 0.DL;
+
   while(s[0] == ' ' || s[0] == '\t' || s[0] == '\n' || s[0] == '\r' || s[0] == '\f') s++;
 
   if(s[0] == '-') {

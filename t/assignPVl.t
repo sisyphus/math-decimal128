@@ -7,7 +7,7 @@ use Math::Decimal128 qw(:all);
 *set_nnuml   = \&Math::Decimal128::set_nnum;
 *clear_nnuml = \&Math::Decimal128::clear_nnum;
 
-my $t = 87;
+my $t = 90;
 
 print "1..$t\n";
 
@@ -828,6 +828,34 @@ else {
   warn "\nExpected 0\nGot $d128\n";
   warn "nnumflagl expected 1, got ", nnumflagl(), "\n";
   print "not ok 87\n";
+}
+
+
+assignPVl($d128, 'InfiniTy');
+
+if(is_InfD128($d128) && nnumflagl() == 1) {print "ok 88\n"}
+else {
+  warn "\nExpected inf\nGot $d128\n";
+  warn "nnumflag expected 1, got ", nnumflagl(), "\n";
+  print "not ok 88\n";
+}
+
+assignPVl($d128, 'infinit');
+
+if(is_InfD128($d128) && nnumflagl() == 2) {print "ok 89\n"}
+else {
+  warn "\nExpected inf\nGot $d128\n";
+  warn "nnumflag expected 2, got ", nnumflagl(), "\n";
+  print "not ok 89\n";
+}
+
+assignPVl($d128, 'infinitys');
+
+if(is_InfD128($d128) && nnumflagl() == 3) {print "ok 90\n"}
+else {
+  warn "\nExpected inf\nGot $d128\n";
+  warn "nnumflag expected 3, got ", nnumflagl(), "\n";
+  print "not ok 90\n";
 }
 
 #################################

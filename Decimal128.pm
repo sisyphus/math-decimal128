@@ -1187,15 +1187,17 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
           $d128 = Math::Decimal128->new('-978719925474.0993e-20');
           $d128 = Math::Decimal128->new('-9307199254740993e-23');
 
-      If the string arg contains characters that don't make sense in
-      numeric context, then a global non-numeric flag which was
-      initialised to 0 is incremented - and the value assigned is in
-      accordance with perl's usual rules. The nnumflag function returns
-      the current value of the global. It can be cleared to 0 by
-      running clear_nnum() and set to x with set_nnum(x). The arg can be
-      in either integer format, scientific notation, float format or
-      (+-)inf/nan. Doing Math::Decimal128->new($string) will also create
-      and assign using PVtoD128().
+      If the string arg contains characters that (according to perl's
+      looks_like_number API function) don't make sense in numeric
+      context, then a global non-numeric flag which was initialised to
+      0 is incremented - and the value assigned is in accordance with
+      perl's usual rules. The arg can be in either integer format,
+      scientific notation, float format or (+-)inf/nan.
+      Doing Math::Decimal128->new($string) will also create and assign
+      using PVtoD128().
+      The nnumflag function returns the current value of the global.
+      It can be cleared to 0 by running clear_nnum() and set to x with
+      set_nnum(x).
       PVtoD128 is now a much improved way of creating and assigning - so
       much so that I'm now recommending it as the preferred way of
       creating a Math::Decimal128 object.

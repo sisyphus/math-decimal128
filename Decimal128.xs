@@ -183,10 +183,11 @@ _Decimal128 _atodecimal(char * s) {
   /*
   plagiarising code available at
   https://www.ibm.com/developerworks/community/wikis/home?lang=en_US#!/wiki/Power%20Systems/page/POWER6%20Decimal%20Floating%20Point%20(DFP)
+  The aim is that nnum be incremented iff looks_like_number() would return false for the given string
  */
 
   _Decimal128 top = 0.DL, bot = 0.DL, result = 0.DL, div = 10.DL;
-  int negative = 0, i = 0, exponent = 0;
+  int negative = 0, i = 0, exponent = 0, count = 0;
 
   if(!strcmp(s, "0 but true")) return 0.DL;
 
@@ -201,7 +202,9 @@ _Decimal128 _atodecimal(char * s) {
   }
 
   if((s[0] == 'i' || s[0] == 'I') && (s[1] == 'n' || s[1] == 'N') && (s[2] == 'f' || s[2] == 'F')) {
-    for(i = 3;;i++) {
+    if((s[3] == 'i' || s[3] == 'I') && (s[4] == 'n' || s[4] == 'N') && (s[5] == 'i' || s[5] == 'I') &&
+       (s[6] == 't' || s[6] == 'T') && (s[7] == 'y' || s[7] == 'Y')) count = 5;
+    for(i = 3 + count;;i++) {
       if(s[i] == 0) return _get_inf(negative);
       if(s[i] != ' ' && s[i] != '\t' && s[i] != '\n' && s[i] != '\r' && s[i] != '\f') {
         nnum++;

@@ -1196,7 +1196,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       0 is incremented - and the value assigned is in accordance with
       perl's usual rules. If $Math::Decimal128::NNW (0 by default)
       is set to 1, then a non-numeric warning is also issued whenever
-      the non-numeric flag is incrementedThe arg can be in either
+      the non-numeric flag is incremented. The arg can be in either
       integer format, scientific notation, float format or (+-)inf/nan.
       Doing Math::Decimal128->new($string) will also create and assign
       using PVtoD128().

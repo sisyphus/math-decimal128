@@ -71,6 +71,9 @@ $Math::Decimal128::nan_str  = unpack("a*", pack( "B*", '011111' . ('0' x 122)));
 $Math::Decimal128::ninf_str = unpack("a*", pack( "B*", '11111'  . ('0' x 123)));
 $Math::Decimal128::pinf_str = unpack("a*", pack( "B*", '01111'  . ('0' x 123)));
 $Math::Decimal128::fmt = d128_fmt();
+$Math::Decimal128::NNW = 0; # set to 1 to enable a non-numeric warning whenever
+                            # a string containing any non-numeric characters is
+                            # treated as a number.
 
 #######################################################################
 #######################################################################
@@ -1191,8 +1194,10 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
       looks_like_number API function) don't make sense in numeric
       context, then a global non-numeric flag which was initialised to
       0 is incremented - and the value assigned is in accordance with
-      perl's usual rules. The arg can be in either integer format,
-      scientific notation, float format or (+-)inf/nan.
+      perl's usual rules. If $Math::Decimal128::NNW (0 by default)
+      is set to 1, then a non-numeric warning is also issued whenever
+      the non-numeric flag is incrementedThe arg can be in either
+      integer format, scientific notation, float format or (+-)inf/nan.
       Doing Math::Decimal128->new($string) will also create and assign
       using PVtoD128().
       The nnumflag function returns the current value of the global.

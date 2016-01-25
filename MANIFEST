@@ -24,6 +24,7 @@ t/lengthy_mantissa.t
 t/MEtoPVl.t
 t/new.t
 t/overload_cmp.t
+t/overload_cmp_reversal.t
 t/overload_int.t
 t/overload_spaceship.t
 t/pod.t

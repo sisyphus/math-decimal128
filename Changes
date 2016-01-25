@@ -1,6 +1,7 @@
 Revision history for Perl module Math::Decimal128
 
 0.07
+    - Fix overloading of comparison operators when operands are reversed.
 
 0.06
     - Add $Math::Decimal128::NNW (set to 0). If this variable is set to 1,

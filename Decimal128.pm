@@ -10,7 +10,7 @@ require Exporter;
 *import = \&Exporter::import;
 require DynaLoader;
 
-$Math::Decimal128::VERSION = '0.07';
+$Math::Decimal128::VERSION = '0.08';
 
 use subs qw(DEC128_MAX DEC128_MIN);
 
@@ -1555,7 +1555,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
     This program is free software; you may redistribute it and/or
     modify it under the same terms as Perl itself.
-    Copyright 2014-15 Sisyphus
+    Copyright 2014-16 Sisyphus
 
 =head1 AUTHOR
 

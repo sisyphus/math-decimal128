@@ -185,21 +185,21 @@ else {
 #######################################
 #######################################
 
-eval {$d128_2 = Math::Decimal128->new(Math::BigInt->new());};
+eval {$d128_2 = Math::Decimal128->new(Math::BigInt->new(7));};
 if($@ =~ /Bad argument given to new/) {print "ok 22\n"}
 else {
   warn "\$\@: $@\n";
   print "not ok 22\n";
 }
 
-eval {$d128_2 = Math::Decimal128::new(Math::BigInt->new());};
+eval {$d128_2 = Math::Decimal128::new(Math::BigInt->new(7));};
 if($@ =~ /Bad argument given to new/) {print "ok 23\n"}
 else {
   warn "\$\@: $@\n";
   print "not ok 23\n";
 }
 
-eval {$d128_2 = new Math::Decimal128(Math::BigInt->new());};
+eval {$d128_2 = new Math::Decimal128(Math::BigInt->new(7));};
 if($@ =~ /Bad argument given to new/) {print "ok 24\n"}
 else {
   warn "\$\@: $@\n";

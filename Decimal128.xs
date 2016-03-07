@@ -371,7 +371,7 @@ SV * NaND128(pTHX) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in NaND128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in NaND128 function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -388,7 +388,7 @@ SV * InfD128(pTHX_ int sign) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in InfD128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in InfD128 function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -405,7 +405,7 @@ SV * ZeroD128(pTHX_ int sign) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in ZeroD128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in ZeroD128 function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -423,7 +423,7 @@ SV * UnityD128(pTHX_ int sign) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in UnityD128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in UnityD128 function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -637,7 +637,7 @@ SV * NVtoD128(pTHX_ SV * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in NVtoD128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in NVtoD128 function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -655,7 +655,7 @@ SV * UVtoD128(pTHX_ SV * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in UVtoD128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in UVtoD128 function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -673,7 +673,7 @@ SV * IVtoD128(pTHX_ SV * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in IVtoD128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in IVtoD128 function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -709,7 +709,7 @@ SV * STRtoD128(pTHX_ char * x) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in STRtoD128(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in STRtoD128 function");
 
      *d128 = strtod128(x, &ptr);
 
@@ -827,7 +827,7 @@ SV * _overload_add(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_add(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_add function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -867,7 +867,7 @@ SV * _overload_mul(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_mul(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_mul function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -907,7 +907,7 @@ SV * _overload_sub(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_sub(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_sub function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -974,7 +974,7 @@ SV * _overload_div(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_div(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_div function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");
@@ -1395,7 +1395,7 @@ SV * _overload_copy(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_copy(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_copy function");
 
      *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a))));
 
@@ -1415,7 +1415,7 @@ SV * D128toD128(pTHX_ SV * a) {
        if(strEQ(h, "Math::Decimal128")) {
 
          Newx(d128, 1, D128);
-         if(d128 == NULL) croak("Failed to allocate memory in D128toD128(aTHX) function");
+         if(d128 == NULL) croak("Failed to allocate memory in D128toD128 function");
 
          *d128 = *(INT2PTR(D128 *, SvIV(SvRV(a))));
 
@@ -1449,7 +1449,7 @@ SV * _overload_abs(pTHX_ SV * a, SV * b, SV * third) {
      SV * obj_ref, * obj;
 
      Newx(d128, 1, D128);
-     if(d128 == NULL) croak("Failed to allocate memory in _overload_abs(aTHX) function");
+     if(d128 == NULL) croak("Failed to allocate memory in _overload_abs function");
 
      obj_ref = newSV(0);
      obj = newSVrv(obj_ref, "Math::Decimal128");

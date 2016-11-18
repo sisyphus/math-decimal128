@@ -5,6 +5,7 @@ Revision history for Perl module Math::Decimal128
     - Amend _atodecimal() to correctly handle the case where the string begins with '-+'
     - In Decimal128, following the _Decimal128 typedef, replace all occurrences of
       "_Decimal128" with "D128".
+    - Fix alignment issue on nvtype=double -DDEBUGGING perls
 
 0.07
     - Fix overloading of comparison operators when operands are reversed.

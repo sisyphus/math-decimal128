@@ -112,9 +112,9 @@ int  _is_inf(D128 x) {
 //}
 */
 
-int _is_neg_zero(_Decimal128 d128) {
+int _is_neg_zero(D128 d128) {
 
-  int n = sizeof(_Decimal128);
+  int n = sizeof(D128);
   void * p = &d128;
 
   if(d128 != 0.0DL) return 0;
@@ -162,7 +162,7 @@ SV *  _is_neg_zero_NV(pTHX_ SV * x) {
 
 D128 _exp10 (int power) {
 
-  _Decimal128 ret = 1.DL;
+  D128 ret = 1.DL;
 
   if(power < 0) {
     while(power < -1000) {
@@ -213,14 +213,14 @@ D128 _get_nan(void) {
      return inf/inf;
 }
 
-_Decimal128 _atodecimal(pTHX_ char * s) {
+D128 _atodecimal(pTHX_ char * s) {
   /*
   plagiarising code available at
   https://www.ibm.com/developerworks/community/wikis/home?lang=en_US#!/wiki/Power%20Systems/page/POWER6%20Decimal%20Floating%20Point%20(DFP)
   The aim is that nnum be incremented iff looks_like_number() would return false for the given string
  */
 
-  _Decimal128 top = 0.DL, bot = 0.DL, result = 0.DL, div = 10.DL;
+  D128 top = 0.DL, bot = 0.DL, result = 0.DL, div = 10.DL;
   int negative = 0, i = 0, exponent = 0, count = 0;
 
   if(!strcmp(s, "0 but true")) return 0.DL;
@@ -278,7 +278,7 @@ _Decimal128 _atodecimal(pTHX_ char * s) {
   if(s[0] == '.') {
     s++;
     for(i = 0; isdigit(s[i]) ;i++) {
-      bot += (_Decimal128)(s[i] - '0') / (_Decimal128)div;
+      bot += (D128)(s[i] - '0') / (D128)div;
       div *= 10.DL;
     }
   }
@@ -629,7 +629,7 @@ void _assignME(pTHX_ SV * a, char * msd, char * nsd, char * lsd, SV * c) {
      D128 all;
 
      man = strtold(msd, NULL);
-     all = (_Decimal128)man * 1e24DL;
+     all = (D128)man * 1e24DL;
 
      man = strtold(nsd, NULL);
      all += (D128)man * 1e12DL;
@@ -705,7 +705,7 @@ SV * PVtoD128(pTHX_ char * x) {
      D128 * d128;
      SV * obj_ref, * obj;
 
-     Newx(d128, 1, _Decimal128);
+     Newx(d128, 1, D128);
      if(d128 == NULL) croak("Failed to allocate memory in PVtoD128 function");
 
      obj_ref = newSV(0);
@@ -761,7 +761,7 @@ void assignIVl(pTHX_ SV * a, SV * val) {
      if(sv_isobject(a)) {
        const char * h = HvNAME(SvSTASH(SvRV(a)));
        if(strEQ(h, "Math::Decimal128")) {
-          *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) = (_Decimal128)SvIV(val);
+          *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) = (D128)SvIV(val);
        }
        else croak("Invalid object supplied to Math::Decimal128::assignIVl function");
      }
@@ -774,7 +774,7 @@ void assignUVl(pTHX_ SV * a, SV * val) {
      if(sv_isobject(a)) {
        const char * h = HvNAME(SvSTASH(SvRV(a)));
        if(strEQ(h, "Math::Decimal128")) {
-          *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) = (_Decimal128)SvUV(val);
+          *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) = (D128)SvUV(val);
        }
        else croak("Invalid object supplied to Math::Decimal128::assignUVl function");
      }
@@ -787,7 +787,7 @@ void assignNVl(pTHX_ SV * a, SV * val) {
      if(sv_isobject(a)) {
        const char * h = HvNAME(SvSTASH(SvRV(a)));
        if(strEQ(h, "Math::Decimal128")) {
-          *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) = (_Decimal128)SvNV(val);
+          *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) = (D128)SvNV(val);
        }
        else croak("Invalid object supplied to Math::Decimal128::assignNVl function");
      }
@@ -796,7 +796,7 @@ void assignNVl(pTHX_ SV * a, SV * val) {
 }
 
 void assignPVl(pTHX_ SV * a, char * s) {
-     *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) = _atodecimal(aTHX_ s);
+     *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) = _atodecimal(aTHX_ s);
 }
 
 void assignD128(pTHX_ SV * a, SV * val) {
@@ -805,7 +805,7 @@ void assignD128(pTHX_ SV * a, SV * val) {
        const char * h =  HvNAME(SvSTASH(SvRV(a)));
        const char * hh = HvNAME(SvSTASH(SvRV(val)));
        if(strEQ(h, "Math::Decimal128") && strEQ(hh, "Math::Decimal128")) {
-          *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) = *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(val))));
+          *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) = *(INT2PTR(D128 *, M_D128_SvIV(SvRV(val))));
        }
        else croak("Invalid object supplied to Math::Decimal128::assignD128 function");
      }
@@ -862,7 +862,7 @@ SV * _overload_add(pTHX_ SV * a, SV * b, SV * third) {
     }
 
     if(SvPOK(b) && !SvNOK(b)) {
-      *d128 = *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) + _atodecimal(aTHX_ SvPV_nolen(b));
+      *d128 = *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) + _atodecimal(aTHX_ SvPV_nolen(b));
       return obj_ref;
     }
 
@@ -902,7 +902,7 @@ SV * _overload_mul(pTHX_ SV * a, SV * b, SV * third) {
     }
 
     if(SvPOK(b) && !SvNOK(b)) {
-      *d128 = *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) * _atodecimal(aTHX_ SvPV_nolen(b));
+      *d128 = *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) * _atodecimal(aTHX_ SvPV_nolen(b));
       return obj_ref;
     }
 
@@ -945,7 +945,7 @@ SV * _overload_sub(pTHX_ SV * a, SV * b, SV * third) {
 
     if(SvPOK(b) && !SvNOK(b)) {
       if(third == &PL_sv_yes) *d128 = _atodecimal(aTHX_ SvPV_nolen(b)) - *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a))));
-      else *d128 = *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) - _atodecimal(aTHX_ SvPV_nolen(b));
+      else *d128 = *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) - _atodecimal(aTHX_ SvPV_nolen(b));
       return obj_ref;
     }
 
@@ -968,10 +968,10 @@ SV * _overload_sub(pTHX_ SV * a, SV * b, SV * third) {
 
 SV * _overload_neg(pTHX_ SV * a, SV * b, SV * third) {
 
-     _Decimal128 * d128;
+     D128 * d128;
      SV * obj_ref, * obj;
 
-     Newx(d128, 1, _Decimal128);
+     Newx(d128, 1, D128);
      if(d128 == NULL) croak("Failed to allocate memory in _overload_sub function");
 
      obj_ref = newSV(0);
@@ -980,7 +980,7 @@ SV * _overload_neg(pTHX_ SV * a, SV * b, SV * third) {
      sv_setiv(obj, INT2PTR(IV,d128));
      SvREADONLY_on(obj);
 
-     *d128 = *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) * -1.DL;
+     *d128 = *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) * -1.DL;
      return obj_ref;
 }
 
@@ -1012,7 +1012,7 @@ SV * _overload_div(pTHX_ SV * a, SV * b, SV * third) {
 
     if(SvPOK(b) && !SvNOK(b)) {
       if(third == &PL_sv_yes) *d128 = _atodecimal(aTHX_ SvPV_nolen(b)) / *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a))));
-      else *d128 = *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(a)))) / _atodecimal(aTHX_ SvPV_nolen(b));
+      else *d128 = *(INT2PTR(D128 *, M_D128_SvIV(SvRV(a)))) / _atodecimal(aTHX_ SvPV_nolen(b));
       return obj_ref;
     }
 
@@ -1541,8 +1541,8 @@ SV * _get_xs_version(pTHX) {
 
 void _d128_bytes(pTHX_ SV * sv) {
   dXSARGS;
-  _Decimal128 d128 = *(INT2PTR(_Decimal128 *, M_D128_SvIV(SvRV(sv))));
-  int i, n = sizeof(_Decimal128);
+  D128 d128 = *(INT2PTR(D128 *, M_D128_SvIV(SvRV(sv))));
+  int i, n = sizeof(D128);
   char * buff;
   void * p = &d128;
 

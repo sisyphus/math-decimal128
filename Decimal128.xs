@@ -38,7 +38,11 @@
 #define M_D128_SvUV SvUVX
 #endif
 
+#if defined(DEBUGGING) && defined(NV_IS_DOUBLE)
+typedef _Decimal128 D128 __attribute__ ((aligned(8)));
+#else
 typedef _Decimal128 D128;
+#endif
 
 int nnum = 0; /* flag that is incremented whenever _atodecimal is handed something non-numeric */
 

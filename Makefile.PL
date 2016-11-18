@@ -17,6 +17,9 @@ $defines .= " -DSTRTOD128_AVAILABLE" if $strtod128;
 if($Config{byteorder} =~ /^1234/) {$defines .= " -DWE_HAVE_LENDIAN"}
 else{$defines .= " -DWE_HAVE_BENDIAN"}
 
+$defines .= " NV_IS_DOUBLE"
+  if $Config{nvtype} eq 'double';
+
 my %options = %{
 {
   NAME => 'Math::Decimal128',

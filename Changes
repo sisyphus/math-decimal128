@@ -3,6 +3,8 @@ Revision history for Perl module Math::Decimal128
     - Remove occurrences of 'aTHX' that had been auto-implanted in some error messages
     - Replace SvIV/SvUV/SvNV with SvIVX/SvUVX/SvNVX where appropriate.
     - Amend _atodecimal() to correctly handle the case where the string begins with '-+'
+    - In Decimal128, following the _Decimal128 typedef, replace all occurrences of
+      "_Decimal128" with "D128".
 
 0.07
     - Fix overloading of comparison operators when operands are reversed.

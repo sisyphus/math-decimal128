@@ -1555,7 +1555,7 @@ Math::Decimal128 - perl interface to C's _Decimal128 operations.
 
     This program is free software; you may redistribute it and/or
     modify it under the same terms as Perl itself.
-    Copyright 2014-16 Sisyphus
+    Copyright 2014-17 Sisyphus
 
 =head1 AUTHOR
 

@@ -121,12 +121,24 @@ int _is_neg_zero(D128 d128) {
   int n = sizeof(D128);
   void * p = &d128;
 
-  if(d128 != 0.0DL) return 0;
+  /*****************************************************
+   I've found cases (in Inline::C and XS, but NOT in C)
+   where -0 is evaluated as being less than 0 (which is
+   simply wrong). To ensure that we don't get tripped up
+   by that behaviour we therefore take the ensuing steps,
+   instead of simply checking that d128 != 0.0DL
+  ******************************************************/
+  if(d128 != 0.0DL) {
+    if(d128 * -1.0DL == 0.0DL) return 1; /* it's a -0 */
+    return 0; /* it's not zero */
+  }
 
 #ifdef WE_HAVE_BENDIAN /* Big Endian architecture */
   if(((unsigned char*)p)[0] >= 128) return 1;
 #else
-  if(((unsigned char*)p)[n - 1] >= 128) return 1;
+  if(((unsigned char*)p)[n - 1] >= 128) {
+    return 1;
+  }
 #endif
   return 0;
 }

@@ -1554,8 +1554,6 @@ void _d128_bytes(pTHX_ SV * sv) {
   char buff[4];
   void * p = &d128;
 
-  if(buff == NULL) croak("Failed to allocate memory in _d128_bytes function");
-
   sp = mark;
 
 #ifdef WE_HAVE_BENDIAN /* Big Endian architecture */

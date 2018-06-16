@@ -38,7 +38,7 @@
 #define M_D128_SvUV SvUVX
 #endif
 
-#if (defined(DEBUGGING) && defined(NV_IS_DOUBLE)) || (defined(__MINGW64__) && __GNUC__ >= 8)
+#if (defined(DEBUGGING) && defined(NV_IS_DOUBLE)) || defined(__MINGW64__)
 typedef _Decimal128 D128 __attribute__ ((aligned(8)));
 #else
 typedef _Decimal128 D128;

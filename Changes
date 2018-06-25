@@ -1,5 +1,7 @@
 Revision history for Perl module Math::Decimal128
 
+0.11
+
 0.10
     - Alter typedef of _Decimal128 for __MINGW64__ . (This became necessary with perl-5.28.0,
       but I've applied it universally whenever __MINGW64__ is defined.)

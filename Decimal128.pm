@@ -41,7 +41,7 @@ use overload
   'neg'   => \&_overload_neg,
 ;
 
-DynaLoader::bootstrap Math::Decimal128 $Math::Decimal128::VERSION;
+Math::Decimal128->DynaLoader::bootstrap($Math::Decimal128::VERSION);
 
 @Math::Decimal128::EXPORT = ();
 @Math::Decimal128::EXPORT_OK = qw(

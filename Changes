@@ -1,6 +1,8 @@
 Revision history for Perl module Math::Decimal128
 
 0.11
+    - Fix https://github.com/sisyphus/math-decimal64/pull/1 (also aplies to Math::Decimal128)
+      Thanks to @hiratara
     - Correct typos in Decimal128.pod. In "DESCRIPTION", change:
         -9.999999999999999999999999999999999e6111
           to

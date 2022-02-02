@@ -1,6 +1,6 @@
 # This file created in response to:
 # https://github.com/sisyphus/math-decimal64/pull/1,
-# which aqlso applies to Math::Decimal128
+# which also applies to Math::Decimal128
 # Thanks to @hiratara
 
 use strict;

@@ -43,8 +43,7 @@ use overload
 
 Math::Decimal128->DynaLoader::bootstrap($Math::Decimal128::VERSION);
 
-@Math::Decimal128::EXPORT = ();
-@Math::Decimal128::EXPORT_OK = qw(
+my @tagged = qw(
     NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
     have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128
     D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
@@ -54,15 +53,9 @@ Math::Decimal128->DynaLoader::bootstrap($Math::Decimal128::VERSION);
     assignIVl assignUVl assignNVl assignD128 assignPVl assignDPDl
     );
 
-%Math::Decimal128::EXPORT_TAGS = (all => [qw(
-    NaND128 InfD128 ZeroD128 UnityD128 Exp10l NVtoD128 UVtoD128 IVtoD128 PVtoD128 STRtoD128
-    have_strtod128 D128toNV assignNaNl assignInfl D128toME DPDtoD128
-    D128toD128 D128toD128 is_NaND128 is_InfD128 is_ZeroD128 DEC128_MAX DEC128_MIN
-    assignMEl d128_bytes MEtoD128 hex2binl decode_d128 decode_bidl decode_dpdl d128_fmt
-    get_expl get_signl PVtoMEl MEtoPVl
-    D128toFSTR D128toRSTR
-    assignIVl assignUVl assignNVl assignPVl assignDPDl assignD128
-    )]);
+@Math::Decimal128::EXPORT = ();
+@Math::Decimal128::EXPORT_OK = @tagged;
+%Math::Decimal128::EXPORT_TAGS = (all => \@tagged);
 
 #######################################################################
 #######################################################################

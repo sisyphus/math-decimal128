@@ -1461,16 +1461,12 @@ SV * _overload_abs(pTHX_ SV * a, SV * b, SV * third) {
      return obj_ref;
 }
 
-SV * _overload_inc(pTHX_ SV * p, SV * second, SV * third) {
-     SvREFCNT_inc(p);
+void _overload_inc(pTHX_ SV * p, SV * second, SV * third) {
      *(INT2PTR(D128 *, M_D128_SvIV(SvRV(p)))) += 1.DL;
-     return p;
 }
 
-SV * _overload_dec(pTHX_ SV * p, SV * second, SV * third) {
-     SvREFCNT_inc(p);
+void _overload_dec(pTHX_ SV * p, SV * second, SV * third) {
      *(INT2PTR(D128 *, M_D128_SvIV(SvRV(p)))) -= 1.DL;
-     return p;
 }
 
 SV * _itsa(pTHX_ SV * a) {
@@ -2147,23 +2143,41 @@ CODE:
   RETVAL = _overload_abs (aTHX_ a, b, third);
 OUTPUT:  RETVAL
 
-SV *
+void
 _overload_inc (p, second, third)
 	SV *	p
 	SV *	second
 	SV *	third
-CODE:
-  RETVAL = _overload_inc (aTHX_ p, second, third);
-OUTPUT:  RETVAL
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _overload_inc(aTHX_ p, second, third);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
 
-SV *
+void
 _overload_dec (p, second, third)
 	SV *	p
 	SV *	second
 	SV *	third
-CODE:
-  RETVAL = _overload_dec (aTHX_ p, second, third);
-OUTPUT:  RETVAL
+        PREINIT:
+        I32* temp;
+        PPCODE:
+        temp = PL_markstack_ptr++;
+        _overload_dec(aTHX_ p, second, third);
+        if (PL_markstack_ptr != temp) {
+          /* truly void, because dXSARGS not invoked */
+          PL_markstack_ptr = temp;
+          XSRETURN_EMPTY; /* return empty stack */
+        }
+        /* must have used dXSARGS; list context implied */
+        return; /* assume stack size is correct */
 
 SV *
 _itsa (a)
